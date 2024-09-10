@@ -30,6 +30,17 @@ namespace Nethereum.Unity.Editors.MultiToken
             return _rect.position;
         }
 
+#if UNITY_EDITOR
+
+        public void SetRectPosition(Vector2 newPosition)
+        {
+            Undo.RecordObject(this, "Move Node");
+            _rect.position = newPosition;
+            EditorUtility.SetDirty(this);
+        }
+
+#endif
+
     }
 
 }

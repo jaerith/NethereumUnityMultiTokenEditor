@@ -20,20 +20,5 @@ namespace Nethereum.Unity.Editors.MultiToken
 
         [SerializeField]
         private long _totalBalance;
-
-        #region UNITY EDITOR SECTION
-
-#if UNITY_EDITOR
-
-        public void SetRectPosition(Vector2 newPosition)
-        {
-            Undo.RecordObject(this, "Move Token Node");
-            _rect.position = newPosition;
-            EditorUtility.SetDirty(this);
-        }
-
-#endif
-
-        #endregion
     }
 }

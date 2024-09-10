@@ -32,13 +32,6 @@ namespace Nethereum.Unity.Editors.MultiToken
             EditorUtility.SetDirty(this);
         }
 
-        public void SetRectPosition(Vector2 newPosition)
-        {
-            Undo.RecordObject(this, "Move Contract Node");
-            _rect.position = newPosition;
-            EditorUtility.SetDirty(this);
-        }
-
 #endif
 
         #endregion
