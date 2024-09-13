@@ -20,5 +20,31 @@ namespace Nethereum.Unity.Editors.MultiToken
 
         [SerializeField]
         private long _totalBalance;
+
+        #region UNITY EDITOR SECTION
+
+        public string tokenName
+        {
+            get { return _tokenName; }
+
+            set
+            {
+                if (_tokenName != value)
+                {
+#if UNITY_EDITOR
+                    Undo.RecordObject(this, "Update Token Name");
+#endif
+
+                    _tokenName = value;
+
+#if UNITY_EDITOR
+                    EditorUtility.SetDirty(this);
+#endif
+                }
+            }
+
+        }
+
+        #endregion
     }
 }

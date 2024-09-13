@@ -15,7 +15,61 @@ namespace Nethereum.Unity.Editors.MultiToken
         [SerializeField]
         private string _contractAddress;
 
+        private bool _isDeployed = false;
+
+        public bool isDeployed
+        {
+            get { return _isDeployed; }
+
+        }
+
         #region UNITY EDITOR SECTION
+
+        public string ContractName
+        {
+            get { return _contractName; }
+
+            set
+            {
+                if (_contractName != value)
+                {
+#if UNITY_EDITOR
+                    Undo.RecordObject(this, "Update Contract Name");
+#endif
+
+                    _contractName = value;
+
+#if UNITY_EDITOR
+                    EditorUtility.SetDirty(this);
+#endif
+                }
+            }
+
+        }
+
+        public string ContractAddress
+        {
+            get { return _contractAddress; }
+
+            set
+            {
+                if (_contractAddress != value)
+                {
+#if UNITY_EDITOR
+                    Undo.RecordObject(this, "Update Contract Address");
+#endif
+
+                    _contractAddress = value;
+
+#if UNITY_EDITOR
+                    EditorUtility.SetDirty(this);
+#endif
+
+                    _isDeployed = true;
+                }
+            }
+
+        }
 
 #if UNITY_EDITOR
         public void AddChild(string childName)
