@@ -21,7 +21,7 @@ using UnityEngine;
 
 namespace Nethereum.Contracts.UnityERC1155
 {
-    public partial class UnityERC1155Service : MonoBehaviour
+    public partial class UnityERC1155Service
     {
         public static Task<TransactionReceipt> DeployContractAndWaitForReceiptAsync(Nethereum.Web3.Web3 web3, UnityERC1155Deployment myERC1155Deployment, CancellationTokenSource cancellationTokenSource = null)
         {
