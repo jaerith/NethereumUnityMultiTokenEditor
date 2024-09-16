@@ -15,14 +15,6 @@ namespace Nethereum.Unity.Editors.MultiToken
         [SerializeField]
         private string _contractAddress;
 
-        private bool _isDeployed = false;
-
-        public bool isDeployed
-        {
-            get { return _isDeployed; }
-
-        }
-
         #region UNITY EDITOR SECTION
 
         public string ContractName

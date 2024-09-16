@@ -15,6 +15,14 @@ namespace Nethereum.Unity.Editors.MultiToken
         [SerializeField]
         protected Rect _rect = new Rect(0, 0, 200, 200);
 
+        [SerializeField]
+        protected bool _isDeployed = false;
+
+        public bool IsDeployed
+        {
+            get { return _isDeployed; }
+        }
+
         public List<string> GetChildren()
         {
             return new List<string>(_children);
