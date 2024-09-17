@@ -376,6 +376,10 @@ namespace Nethereum.Unity.Editors.MultiToken
                     {
                         _deletingNode = node;
                     }
+                    if (GUILayout.Button("?"))
+                    {
+                        _refreshingNode = node;
+                    }
                 }
                 else
                 {
