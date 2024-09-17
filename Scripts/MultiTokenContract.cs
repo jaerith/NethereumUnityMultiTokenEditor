@@ -14,11 +14,12 @@ using Nethereum.Unity.Rpc;
 
 using Nethereum.Contracts.UnityERC1155;
 using Nethereum.Contracts.UnityERC1155.ContractDefinition;
-
+using Org.BouncyCastle.Crypto.Tls;
+using Nethereum.Contracts.Standards.ERC1155;
 
 namespace Nethereum.Unity.Editors.MultiToken
 {
-    [CreateAssetMenu(fileName = "New MultiToken Contract", menuName = "Multitoken Contract", order = 0)]
+    [CreateAssetMenu(fileName = "New MultiToken Contract", menuName = "Ethereum/Multitoken Contract", order = 0)]
     public class MultiTokenContract : ScriptableObject, ISerializationCallbackReceiver
     {
         [SerializeField]
@@ -30,19 +31,21 @@ namespace Nethereum.Unity.Editors.MultiToken
         [SerializeField]
         private long _chainId = 444444444500; //Nethereum test chain, chainId
 
-        private Account   _account = null;
-        private Web3.Web3 _web3    = null;
+        [SerializeField]
+        private long _maxTokenId = 1; //Nethereum test chain, chainId
+
+        private Account _account = null;
+        private Web3.Web3 _web3 = null;
 
         private UnityERC1155Service _erc1155Service = null;
 
-        [SerializeField]
-        private readonly Vector2 NewNodeOffset = new Vector2(250, 0);
-
-        [SerializeField]
         private MultiTokenContractNode rootNode = null;
 
         [SerializeField]
-        List<MultiTokenNode> nodes = new List<MultiTokenNode>();
+        private List<MultiTokenNode> nodes = new List<MultiTokenNode>();
+
+        [SerializeField]
+        private readonly Vector2 NewNodeOffset = new Vector2(250, 0);
 
         [SerializeField]
         Dictionary<string, MultiTokenNode> nodeLookup = new Dictionary<string, MultiTokenNode>();
@@ -57,7 +60,29 @@ namespace Nethereum.Unity.Editors.MultiToken
         private void OnValidate()
         {
             nodeLookup.Clear();
+
             nodes.ForEach(x => nodeLookup[x.name] = x);
+
+            if (_account == null)
+            {
+                _account = new Account(_privateKey, _chainId);
+
+                //Now let's create an instance of Web3 using our account pointing to our nethereum testchain
+                _web3 = new Web3.Web3(_account, _chainUrl);
+                _web3.TransactionManager.UseLegacyAsDefault = true; //Using legacy option instead of 1559
+            }
+
+            if ((nodes.Count > 0) && (_erc1155Service == null))
+            {
+                if (nodes[0] is MultiTokenContractNode)
+                {
+                    rootNode = (MultiTokenContractNode) nodes[0];
+
+                    Debug.Log("DEBUG: Instantiating ERC1155 service on load of MultiTokenContract.");
+
+                    _erc1155Service = new UnityERC1155Service(_web3, GetRootNode().ContractAddress);
+                }
+            }
         }
 
         public IEnumerable<MultiTokenNode> GetAllNodes()
@@ -66,6 +91,12 @@ namespace Nethereum.Unity.Editors.MultiToken
         }
 
         public MultiTokenContractNode GetRootNode() { return rootNode; }
+
+        public string ChainUrl { get { return _chainUrl; } }
+
+        public string PrivateKey { get { return _privateKey; } }
+
+        public long ChainId { get { return _chainId; } }
 
         public IEnumerable<MultiTokenNode> GetAllChildren(MultiTokenNode parentNode)
         {
@@ -84,6 +115,11 @@ namespace Nethereum.Unity.Editors.MultiToken
             }
         }
 
+        public UnityERC1155Service MultiTokenService
+        {
+            get { return _erc1155Service; }
+        }
+
         public void OnBeforeSerialize()
         {
 #if UNITY_EDITOR
@@ -93,6 +129,10 @@ namespace Nethereum.Unity.Editors.MultiToken
                 AddNode(newChild);
 
                 rootNode = (MultiTokenContractNode) newChild;
+            }
+            else
+            {
+                rootNode = (MultiTokenContractNode) nodes[0];
             }
 
             if (!String.IsNullOrEmpty(AssetDatabase.GetAssetPath(this)))
@@ -111,6 +151,7 @@ namespace Nethereum.Unity.Editors.MultiToken
         }
 
         #region UNITY_EDITOR_REGION
+
 #if UNITY_EDITOR
 
         private void AddNode(MultiTokenNode newChild)
@@ -155,19 +196,21 @@ namespace Nethereum.Unity.Editors.MultiToken
             {
                 newChild = CreateInstance<MultiTokenMintNode>();
 
-                newChild.name = Guid.NewGuid().ToString();
+                var mintChild = (MultiTokenMintNode) newChild;
 
-                newChild.SetRectPosition(parent.GetRect().position + NewNodeOffset);
+                mintChild.name = Guid.NewGuid().ToString();
 
-                parent.AddChild(newChild.name);
+                mintChild.SetTokenId(_maxTokenId++);
+
+                mintChild.SetRectPosition(parent.GetRect().position + NewNodeOffset);
+
+                parent.AddChild(mintChild.name);
             }
             else
             {
                 newChild = CreateInstance<MultiTokenContractNode>();
 
                 newChild.name = Guid.NewGuid().ToString();
-
-                newChild.SetRectPosition(parent.GetRect().position + NewNodeOffset);
             }
 
             return newChild;
@@ -176,6 +219,13 @@ namespace Nethereum.Unity.Editors.MultiToken
         private void RemoveDanglingChildren(MultiTokenMintNode targetNode)
         {
             rootNode.RemoveChild(targetNode.name);
+        }
+
+        public void InstantiateService(string contractAddress)
+        {
+            GetRootNode().ContractAddress = contractAddress;
+
+            _erc1155Service = new UnityERC1155Service(_web3, contractAddress);
         }
 
 #endif
