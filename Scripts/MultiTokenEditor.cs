@@ -1,52 +1,81 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEngine;
+using Unity.EditorCoroutines.Editor;
+
+using Nethereum.Contracts.UnityERC1155.ContractDefinition;
+using Nethereum.Unity.Rpc;
+using Nethereum.Signer;
+using Nethereum.Unity.Contracts;
+using Nethereum.Contracts.Standards.ERC1155;
 
 namespace Nethereum.Unity.Editors.MultiToken
 {
     public class MultiTokenEditor : EditorWindow
     {
-        public const float CANVAS_SIZE_WIDTH  = 4000f;
-        public const float CANVAS_SIZE_HEIGHT = 4000f;
+        public const float CanvasSizeWidth  = 4000f;
+        public const float CanvasSizeHeight = 4000f;
 
-        public const float BACKGROUND_DIM_SIZE = 50f;
+        public const float BackgroundDimSize = 50f;
 
         [SerializeField]
-        private Dictionary<string, string> _erc1155Contracts = new Dictionary<string, string>();
+        private List<string> _erc1155ContractNames = new List<string>();
 
-        MultiTokenContract selectedContract = null;
+        [SerializeField]
+        private List<string> _erc1155ContractAddresses = new List<string>();
+
+        private Dictionary<string, string> _erc1155ContractMap = new Dictionary<string, string>();
+
+        MultiTokenContract _selectedContract = null;
 
         [NonSerialized]
-        GUIStyle nodeStyle;
+        GUIStyle _nodeContractStyle;
+
+        [NonSerialized]
+        GUIStyle _nodeDeployedContractStyle;
 
         [NonSerialized] 
-        GUIStyle nodeTokenStyle;
+        GUIStyle _nodeTokenStyle;
 
         [NonSerialized]
-        MultiTokenNode draggingNode = null;
+        GUIStyle _nodeDeployedTokenStyle;
 
         [NonSerialized]
-        Vector2 draggingOffset = Vector2.zero;
+        MultiTokenNode _draggingNode = null;
 
         [NonSerialized]
-        MultiTokenNode creatingNode = null;
+        Vector2 _draggingOffset = Vector2.zero;
 
         [NonSerialized]
-        MultiTokenNode deletingNode = null;
+        MultiTokenNode _deployingNode = null;
 
         [NonSerialized]
-        MultiTokenNode linkingParentNode = null;
-
-        Vector2 scrollPosition;
+        MultiTokenNode _mintingNode = null;
 
         [NonSerialized]
-        bool draggingCanvas = false;
+        MultiTokenNode _creatingNode = null;
 
         [NonSerialized]
-        Vector2 draggingCanvasOffset;
+        MultiTokenNode _refreshingNode = null;
+
+        [NonSerialized]
+        MultiTokenNode _deletingNode = null;
+
+        [NonSerialized]
+        MultiTokenNode _linkingParentNode = null;
+
+        Vector2 _scrollPosition;
+
+        [NonSerialized]
+        bool _draggingCanvas = false;
+
+        [NonSerialized]
+        Vector2 _draggingCanvasOffset;
 
         [MenuItem("Window/Ethereum/MultiToken Editor")]
         public static void ShowEditorWindow()
@@ -72,17 +101,29 @@ namespace Nethereum.Unity.Editors.MultiToken
         {
             Selection.selectionChanged += OnSelectionChanged;
 
-            nodeStyle = new GUIStyle();
-            nodeStyle.normal.background = EditorGUIUtility.Load("node0") as Texture2D;
-            nodeStyle.normal.textColor  = Color.white;
-            nodeStyle.padding = new RectOffset(20, 20, 20, 20);
-            nodeStyle.border  = new RectOffset(12, 12, 12, 12);
+            _nodeContractStyle = new GUIStyle();
+            _nodeContractStyle.normal.background = EditorGUIUtility.Load("node0") as Texture2D;
+            _nodeContractStyle.normal.textColor  = Color.white;
+            _nodeContractStyle.padding = new RectOffset(20, 20, 20, 20);
+            _nodeContractStyle.border  = new RectOffset(12, 12, 12, 12);
 
-            nodeTokenStyle = new GUIStyle();
-            nodeTokenStyle.normal.background = EditorGUIUtility.Load("node1") as Texture2D;
-            nodeTokenStyle.normal.textColor = Color.white;
-            nodeTokenStyle.padding = new RectOffset(20, 20, 20, 20);
-            nodeTokenStyle.border  = new RectOffset(12, 12, 12, 12);
+            _nodeDeployedContractStyle = new GUIStyle();
+            _nodeDeployedContractStyle.normal.background = EditorGUIUtility.Load("node1") as Texture2D;
+            _nodeDeployedContractStyle.normal.textColor  = Color.white;
+            _nodeDeployedContractStyle.padding = new RectOffset(20, 20, 20, 20);
+            _nodeDeployedContractStyle.border  = new RectOffset(12, 12, 12, 12);
+
+            _nodeTokenStyle = new GUIStyle();
+            _nodeTokenStyle.normal.background = EditorGUIUtility.Load("node0") as Texture2D;
+            _nodeTokenStyle.normal.textColor = Color.white;
+            _nodeTokenStyle.padding = new RectOffset(20, 20, 20, 20);
+            _nodeTokenStyle.border  = new RectOffset(12, 12, 12, 12);
+
+            _nodeDeployedTokenStyle = new GUIStyle();
+            _nodeDeployedTokenStyle.normal.background = EditorGUIUtility.Load("node2") as Texture2D;
+            _nodeDeployedTokenStyle.normal.textColor = Color.white;
+            _nodeDeployedTokenStyle.padding = new RectOffset(20, 20, 20, 20);
+            _nodeDeployedTokenStyle.border  = new RectOffset(12, 12, 12, 12);            
         }
 
         private void OnSelectionChanged() 
@@ -91,15 +132,23 @@ namespace Nethereum.Unity.Editors.MultiToken
 
             if (contractInstance != null)
             {
-                selectedContract = contractInstance;
+                _selectedContract = contractInstance;
 
                 Repaint();
+            }
+
+            if (_erc1155ContractMap.Count == 0) 
+            { 
+                for (int index = 0; index < _erc1155ContractNames.Count; ++index) 
+                {
+                    _erc1155ContractMap[_erc1155ContractNames[index]] = _erc1155ContractAddresses[index];
+                }
             }
         }
 
         private void OnGUI()
         {
-            if (selectedContract == null)
+            if (_selectedContract == null)
             {
                 EditorGUILayout.LabelField("No Contract Selected.");
             }
@@ -107,33 +156,52 @@ namespace Nethereum.Unity.Editors.MultiToken
             {
                 ProcessEvents();
 
-                scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+                _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
 
-                Rect canvas = GUILayoutUtility.GetRect(CANVAS_SIZE_WIDTH, CANVAS_SIZE_HEIGHT);
+                Rect canvas = GUILayoutUtility.GetRect(CanvasSizeWidth, CanvasSizeHeight);
                 DrawBackground(canvas);
 
-                foreach (var node in selectedContract.GetAllNodes()) 
+                foreach (var node in _selectedContract.GetAllNodes()) 
                 {
                     DrawConnections(node);
                 }
 
-                foreach (var node in selectedContract.GetAllNodes())
+                foreach (var node in _selectedContract.GetAllNodes())
                 {
                     DrawNode(node);
                 }
 
                 EditorGUILayout.EndScrollView();
 
-                if ((creatingNode != null) && (creatingNode is MultiTokenContractNode))
+                if (_deployingNode != null)
                 {
-                    selectedContract.CreateNode((MultiTokenContractNode) creatingNode);
-                    creatingNode = null;
+                    EditorCoroutineUtility.StartCoroutine(DeployErc1155Contract(), this);
+
+                    _deployingNode = null;
                 }
 
-                if (deletingNode != null)
+                if ((_mintingNode != null) && (_mintingNode is MultiTokenMintNode))
                 {
-                    selectedContract.DeleteNode(deletingNode);
-                    deletingNode = null;
+                    MintToken((MultiTokenMintNode) _mintingNode);
+                    _mintingNode = null;
+                }
+
+                if ((_creatingNode != null) && (_creatingNode is MultiTokenContractNode))
+                {
+                    _selectedContract.CreateNode((MultiTokenContractNode) _creatingNode);
+                    _creatingNode = null;
+                }
+
+                if ((_refreshingNode != null) && (_refreshingNode is MultiTokenMintNode))
+                {
+                    RefreshMintNode((MultiTokenMintNode) _refreshingNode);
+                    _refreshingNode = null;
+                }                
+
+                if (_deletingNode != null)
+                {
+                    _selectedContract.DeleteNode(_deletingNode);
+                    _deletingNode = null;
                 }
             }
         }
@@ -152,7 +220,7 @@ namespace Nethereum.Unity.Editors.MultiToken
         {
             Vector3 startPosition = new Vector2(node.GetRect().xMax, node.GetRect().center.y);
 
-            foreach (MultiTokenNode childNode in selectedContract.GetAllChildren(node))
+            foreach (MultiTokenNode childNode in _selectedContract.GetAllChildren(node))
             {
                 if (childNode != null)
                 {
@@ -175,61 +243,61 @@ namespace Nethereum.Unity.Editors.MultiToken
 
         private void ProcessEvents()
         {
-            if ((Event.current.type == EventType.MouseDown) && (draggingNode == null))
+            if ((Event.current.type == EventType.MouseDown) && (_draggingNode == null))
             {
-                Vector2 relativeMousePosition = Event.current.mousePosition + scrollPosition;
+                Vector2 relativeMousePosition = Event.current.mousePosition + _scrollPosition;
 
-                draggingNode = GetNodeAtPoint(relativeMousePosition);
-                if (draggingNode != null)
+                _draggingNode = GetNodeAtPoint(relativeMousePosition);
+                if (_draggingNode != null)
                 {
-                    draggingOffset = draggingNode.GetRect().position - Event.current.mousePosition;
+                    _draggingOffset = _draggingNode.GetRect().position - Event.current.mousePosition;
 
-                    Selection.activeObject = draggingNode;
+                    Selection.activeObject = _draggingNode;
                 }
                 else
                 {
-                    draggingCanvas       = true;
-                    draggingCanvasOffset = relativeMousePosition;
+                    _draggingCanvas       = true;
+                    _draggingCanvasOffset = relativeMousePosition;
 
-                    Selection.activeObject = selectedContract;
+                    Selection.activeObject = _selectedContract;
                 }
             }
-            else if ((Event.current.type == EventType.MouseDrag) && (draggingNode != null))
+            else if ((Event.current.type == EventType.MouseDrag) && (_draggingNode != null))
             {
-                draggingNode.SetRectPosition(Event.current.mousePosition + draggingOffset);
+                _draggingNode.SetRectPosition(Event.current.mousePosition + _draggingOffset);
 
                 GUI.changed = true;
             }
-            else if ((Event.current.type == EventType.MouseDrag) && draggingCanvas)
+            else if ((Event.current.type == EventType.MouseDrag) && _draggingCanvas)
             {
-                scrollPosition = draggingCanvasOffset - Event.current.mousePosition;
+                _scrollPosition = _draggingCanvasOffset - Event.current.mousePosition;
 
                 GUI.changed = true;
             }
-            else if ((Event.current.type == EventType.MouseUp) && (draggingNode != null))
+            else if ((Event.current.type == EventType.MouseUp) && (_draggingNode != null))
             {
-                draggingNode   = null;
-                draggingOffset = Vector2.zero;
+                _draggingNode   = null;
+                _draggingOffset = Vector2.zero;
             }
-            else if ((Event.current.type == EventType.MouseUp) && draggingCanvas)
+            else if ((Event.current.type == EventType.MouseUp) && _draggingCanvas)
             {
-                draggingCanvas       = false;
-                draggingCanvasOffset = Vector2.zero;
+                _draggingCanvas       = false;
+                _draggingCanvasOffset = Vector2.zero;
             }
         }
 
         private void DrawLinkButton(MultiTokenNode targetNode)
         {
-            if ((linkingParentNode != null) && (linkingParentNode is MultiTokenContractNode))
+            if ((_linkingParentNode != null) && (_linkingParentNode is MultiTokenContractNode))
             {
-                var contractNode = (MultiTokenContractNode) linkingParentNode;
+                var contractNode = (MultiTokenContractNode) _linkingParentNode;
 
                 if (contractNode.GetChildren().Contains(targetNode.name))
                 {
                     if (GUILayout.Button("unlink"))
                     {
                         contractNode.RemoveChild(targetNode.name);
-                        linkingParentNode = null;
+                        _linkingParentNode = null;
                     }
                 }
                 else if (targetNode.name != contractNode.name)
@@ -237,14 +305,14 @@ namespace Nethereum.Unity.Editors.MultiToken
                     if (GUILayout.Button("child"))
                     {
                         contractNode.AddChild(targetNode.name);
-                        linkingParentNode = null;
+                        _linkingParentNode = null;
                     }
                 }
                 else
                 {
                     if (GUILayout.Button("cancel"))
                     {
-                        linkingParentNode = null;
+                        _linkingParentNode = null;
                     }
                 }
             }
@@ -252,14 +320,75 @@ namespace Nethereum.Unity.Editors.MultiToken
 
         private void DrawNode(MultiTokenNode node)
         {
+            bool isContractNode = (node is MultiTokenContractNode);
+
             GUIStyle currentStyle =
-                (node is MultiTokenMintNode) ? nodeTokenStyle : nodeStyle;
+                !isContractNode ? 
+                    (node.IsDeployed ? _nodeDeployedTokenStyle : _nodeTokenStyle) : 
+                    (node.IsDeployed ? _nodeDeployedContractStyle : _nodeContractStyle);
 
             GUILayout.BeginArea(node.GetRect(), currentStyle);
 
-            /**
-             ** NODE CREATION
-             **/
+            if (isContractNode) 
+            {
+                var contractNode = (MultiTokenContractNode) node;
+
+                var oldContractName = contractNode.ContractName;
+                var newContractName = EditorGUILayout.TextField(oldContractName);
+                contractNode.ContractName = newContractName;
+
+                EditorUtility.SetDirty(_selectedContract);
+
+                GUILayout.BeginHorizontal();
+
+                if (contractNode.IsDeployed)
+                {
+                    if (GUILayout.Button("+"))
+                    {
+                        _creatingNode = node;
+                    }
+                }
+                else
+                {
+                    if (GUILayout.Button(">"))
+                    {
+                        _deployingNode = node;
+                    }
+                }
+
+                GUILayout.EndHorizontal();
+            }
+            else
+            {
+                var mintNode = (MultiTokenMintNode) node;
+
+                var oldTokenName = mintNode.TokenName;
+                var newTokenName = EditorGUILayout.TextField(oldTokenName);
+                mintNode.TokenName = newTokenName;
+
+                EditorUtility.SetDirty(_selectedContract);
+
+                GUILayout.BeginHorizontal();
+
+                if (mintNode.IsDeployed)
+                {
+                    if (GUILayout.Button("x"))
+                    {
+                        _deletingNode = node;
+                    }
+                }
+                else
+                {
+                    if (GUILayout.Button(">"))
+                    {
+                        _mintingNode = node;
+                    }
+                }
+
+                DrawLinkButton(node);
+
+                GUILayout.EndHorizontal();
+            }
 
             GUILayout.EndArea();            
         }
@@ -268,7 +397,108 @@ namespace Nethereum.Unity.Editors.MultiToken
         {
             var absoluteMousePosition = mousePosition;
 
-            return selectedContract.GetAllNodes().LastOrDefault(x => x.GetRect().Contains(absoluteMousePosition));
+            return _selectedContract.GetAllNodes().LastOrDefault(x => x.GetRect().Contains(absoluteMousePosition));
+        }
+
+        private IContractTransactionUnityRequest GetTransactionUnityRequest(MultiTokenContract contract)
+        {
+            return new TransactionSignedUnityRequest(contract.ChainUrl, contract.PrivateKey, contract.ChainId);
+        }
+
+        private IEnumerator DeployErc1155Contract()
+        {
+            var transactionRequest = GetTransactionUnityRequest(_selectedContract);
+            transactionRequest.UseLegacyAsDefault = true;
+
+            var erc1155Contract = new UnityERC1155Deployment();
+
+            Debug.Log("DEBUG: Signing and sending ERC1155 contract deployment");
+
+            //deploy the contract and True indicates we want to estimate the gas
+            yield return transactionRequest.SignAndSendDeploymentContractTransaction(erc1155Contract);
+
+            if (transactionRequest.Exception != null)
+            {
+                Debug.Log(transactionRequest.Exception.Message);
+                yield break;
+            }
+
+            var transactionHash = transactionRequest.Result;
+
+            Debug.Log("DEBUG: Deployment transaction hash:" + transactionHash);
+
+            //create a poll to get the receipt when mined
+            var transactionReceiptPolling =
+                new TransactionReceiptPollingRequest(new UnityWebRequestRpcClientFactory(_selectedContract.ChainUrl));
+
+            Debug.Log("DEBUG: Polling to retrieve address of ERC1155 contract deployment");
+
+            //checking every 2 seconds for the receipt
+            yield return transactionReceiptPolling.PollForReceipt(transactionHash, 2);
+            var deploymentReceipt = transactionReceiptPolling.Result;
+
+            Debug.Log("DEBUG: Obtained receipt of ERC1155 contract deployment -> Address(" + deploymentReceipt.ContractAddress + ")");
+
+            _selectedContract.InstantiateService(deploymentReceipt.ContractAddress);
+
+            _erc1155ContractNames.Add(_selectedContract.GetRootNode().ContractName);
+            _erc1155ContractAddresses.Add(deploymentReceipt.ContractAddress);
+
+            _erc1155ContractMap[_selectedContract.GetRootNode().ContractName] = deploymentReceipt.ContractAddress;
+        }
+
+        private async void MintToken(MultiTokenMintNode mintNode)
+        {
+            if (_selectedContract != null)
+            {
+                Debug.Log("DEBUG: At ERC1155 contract at (" + _erc1155ContractMap[_selectedContract.GetRootNode().ContractName] +
+                          "), there was a 'set URI' request issued for Game Token Id (" + mintNode.TokenId + ")");
+
+                //Adding the product information
+                var tokenUriReceipt =
+                    await _selectedContract.MultiTokenService.SetTokenUriRequestAndWaitForReceiptAsync(mintNode.TokenId, mintNode.TokenMetadataUrl);
+
+                Debug.Log("DEBUG: At ERC1155 contract at (" + _erc1155ContractMap[_selectedContract.GetRootNode().ContractName] +
+                          "), there was a mint request issued for Game Token Id (" + mintNode.TokenId + ") with a starting balance of [" + mintNode.TokenBalance + "]");
+
+                var mintReceipt =
+                    await _selectedContract.MultiTokenService.MintRequestAndWaitForReceiptAsync(mintNode.TokenOwnerAddress, mintNode.TokenId, mintNode.TokenBalance, new byte[] { });
+
+                var balance =
+                    await _selectedContract.MultiTokenService.BalanceOfQueryAsync(mintNode.TokenOwnerAddress, mintNode.TokenId);
+
+                Debug.Log("DEBUG: The current balance of ERC1155 contract at (" + _erc1155ContractMap[_selectedContract.GetRootNode().ContractName] +
+                          ") for Game Token Id (" + mintNode.TokenId + ") is [" + balance + "]");
+
+                mintNode.SetDeployedStatus(true);
+            }
+            else
+            {
+                Debug.Log("DEBUG: MintToken() cannot be invoked properly since the selected contract is NULL.");
+            }
+        }
+
+        private async void RefreshMintNode(MultiTokenMintNode mintNode)
+        {
+            if (_selectedContract != null)
+            {
+                Debug.Log("DEBUG: At ERC1155 contract at (" + _erc1155ContractMap[_selectedContract.GetRootNode().ContractName] +
+                          "), there was a minted token refresh issued for Game Token Id (" + mintNode.TokenId + ") with a starting balance of [" + mintNode.TokenBalance + "]");
+
+                var balance =
+                    await _selectedContract.MultiTokenService.BalanceOfQueryAsync(mintNode.TokenOwnerAddress, mintNode.TokenId);
+
+                long balanceNum = unchecked((long)(ulong)(balance & ulong.MaxValue));
+
+                Debug.Log("DEBUG: The current balance of ERC1155 contract at (" + _erc1155ContractMap[_selectedContract.GetRootNode().ContractName] +
+                          ") for Game Token Id (" + mintNode.TokenId + ") is [" + balanceNum + "]");
+
+                mintNode.SetTokenBalance(balanceNum);
+            }
+            else
+            {
+                Debug.Log("DEBUG: MintToken() cannot be invoked properly since the selected contract is NULL.");
+            }
         }
     }
 }
