@@ -12,7 +12,7 @@ namespace Nethereum.Unity.Editors.MultiToken
     public class MultiTokenMintNode : MultiTokenNode
     {
         [SerializeField]
-        private BigInteger _tokenId;
+        private long _tokenId;
 
         [SerializeField]
         private string _tokenName;
@@ -29,10 +29,6 @@ namespace Nethereum.Unity.Editors.MultiToken
         [SerializeField]
         private long _totalBalance;
 
-        public BigInteger TokenId { get { return _tokenId; } }
-
-        public string TokenName { get { return _tokenName; } }
-
         public string TokenSymbol { get { return _tokenSymbol; } }
 
         public string TokenOwnerAddress { get { return _tokenOwnerAddress; } }
@@ -41,9 +37,31 @@ namespace Nethereum.Unity.Editors.MultiToken
 
         public long TokenBalance { get { return _totalBalance; } }
 
+        public void SetTokenBalance(long newBalance)
+        {
+            _totalBalance = newBalance;
+        }
+
+
         #region UNITY EDITOR SECTION
 
-        public string tokenName
+        public void SetTokenId(long newTokenId)
+        {
+            _tokenId = newTokenId;
+        }
+
+        public void SetDeployedStatus(bool isDeployed)
+        {
+            _isDeployed = isDeployed;
+        }
+
+        public BigInteger TokenId
+        {
+            get { return (BigInteger) _tokenId; }
+
+        }
+
+        public string TokenName
         {
             get { return _tokenName; }
 
@@ -65,10 +83,6 @@ namespace Nethereum.Unity.Editors.MultiToken
 
         }
 
-        public void SetDeployedStatus(bool isDeployed)
-        {
-            _isDeployed = isDeployed;
-        }
 
         #endregion
     }
