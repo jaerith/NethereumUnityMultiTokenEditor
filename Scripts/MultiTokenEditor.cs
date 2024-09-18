@@ -144,6 +144,19 @@ namespace Nethereum.Unity.Editors.MultiToken
                     _erc1155ContractMap[_erc1155ContractNames[index]] = _erc1155ContractAddresses[index];
                 }
             }
+
+            if (_selectedContract != null) 
+            {
+                var nodesList = new List<MultiTokenNode>(_selectedContract.GetAllNodes());
+                for (int index = 1; index < nodesList.Count(); index++)
+                {
+                    var node = nodesList[index];
+                    if (node is MultiTokenMintNode)
+                    {
+                        RefreshMintNode((MultiTokenMintNode) node);
+                    }
+                }
+            }
         }
 
         private void OnGUI()
@@ -484,7 +497,7 @@ namespace Nethereum.Unity.Editors.MultiToken
 
         private async void RefreshMintNode(MultiTokenMintNode mintNode)
         {
-            if (_selectedContract != null)
+            if ((_selectedContract != null) && mintNode.IsDeployed)
             {
                 Debug.Log("DEBUG: At ERC1155 contract at (" + _erc1155ContractMap[_selectedContract.GetRootNode().ContractName] +
                           "), there was a minted token refresh issued for Game Token Id (" + mintNode.TokenId + ") with a starting balance of [" + mintNode.TokenBalance + "]");
