@@ -7,6 +7,8 @@ using UnityEditor.Experimental.GraphView;
 using UnityEditor;
 using UnityEngine;
 
+using Nethereum.Unity.Editors;
+
 namespace Nethereum.Unity.Editors.MultiToken
 {
     public class MultiTokenMintNode : MultiTokenNode
@@ -29,16 +31,29 @@ namespace Nethereum.Unity.Editors.MultiToken
         [SerializeField]
         private long _totalBalance;
 
+        [HideInInspector]
+        [SerializeField]
+        private long _initialTotalBalance = 0;
+
         public string TokenSymbol { get { return _tokenSymbol; } }
 
         public string TokenOwnerAddress { get { return _tokenOwnerAddress; } }
 
         public string TokenMetadataUrl { get { return _tokenMetadataUrl; } }
 
+        public long InitialTokenBalance { get { return _initialTotalBalance; } }
+
         public long TokenBalance { get { return _totalBalance; } }
+
+        public bool IsNFT() { return (_initialTotalBalance == 1); }
 
         public void SetTokenBalance(long newBalance)
         {
+            if (_initialTotalBalance == 0)
+            {
+                _initialTotalBalance = newBalance;
+            }
+
             _totalBalance = newBalance;
         }
 
