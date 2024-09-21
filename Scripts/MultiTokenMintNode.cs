@@ -8,11 +8,15 @@ using UnityEditor;
 using UnityEngine;
 
 using Nethereum.Unity.Editors;
+using Nethereum.Unity.Editors.Utils;
 
-namespace Nethereum.Unity.Editors.MultiToken
+namespace Nethereum.Unity.MultiToken
 {
     public class MultiTokenMintNode : MultiTokenNode
     {
+        public delegate void TransferAction(MultiTokenMintNode mintNode, string newOwner);
+        public static event TransferAction OnTransfer;
+
         [SerializeField]
         private long _tokenId;
 
@@ -34,6 +38,10 @@ namespace Nethereum.Unity.Editors.MultiToken
         [HideInInspector]
         [SerializeField]
         private long _initialTotalBalance = 0;
+
+        [SerializeField]
+        [OnChangedCall("onOwnersChanged")]
+        private List<string> _ownerAddresses = new List<string>();
 
         public string TokenSymbol { get { return _tokenSymbol; } }
 
@@ -59,6 +67,35 @@ namespace Nethereum.Unity.Editors.MultiToken
 
 
         #region UNITY EDITOR SECTION
+
+        public void onOwnersChanged()
+        {
+            if (_totalBalance > 0)
+            {
+                if (_ownerAddresses.Count > 0)
+                {
+                    var newOwner = _ownerAddresses[_ownerAddresses.Count - 1];
+
+                    if (!String.IsNullOrEmpty(newOwner.Trim()))
+                    {
+                        Debug.Log("DEBUG: OnTransfer() -> Transfer of (" + _tokenSymbol + ") token to new address (" + newOwner + ").");
+                        OnTransfer(this, newOwner);
+                    }
+                }
+            }
+            else
+            {
+                Debug.Log("If attempting to assign new tokens, it cannot - no more tokens are available.");
+            }
+        }
+
+        public void RequestOwnership(string requestingOwnerAddress)
+        {
+            if (IsDeployed)
+            {
+                OnTransfer(this, requestingOwnerAddress);
+            }
+        }
 
         public void SetTokenId(long newTokenId)
         {
@@ -97,7 +134,6 @@ namespace Nethereum.Unity.Editors.MultiToken
             }
 
         }
-
 
         #endregion
     }

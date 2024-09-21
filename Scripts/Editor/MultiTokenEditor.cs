@@ -14,7 +14,7 @@ using Nethereum.Signer;
 using Nethereum.Unity.Contracts;
 using Nethereum.Contracts.Standards.ERC1155;
 
-namespace Nethereum.Unity.Editors.MultiToken
+namespace Nethereum.Unity.MultiToken
 {
     public class MultiTokenEditor : EditorWindow
     {
@@ -44,6 +44,9 @@ namespace Nethereum.Unity.Editors.MultiToken
 
         [NonSerialized]
         GUIStyle _nodeDeployedTokenStyle;
+
+        [NonSerialized]
+        GUIStyle _nodeDeployedNFTStyle;
 
         [NonSerialized]
         MultiTokenNode _draggingNode = null;
@@ -101,17 +104,23 @@ namespace Nethereum.Unity.Editors.MultiToken
         {
             Selection.selectionChanged += OnSelectionChanged;
 
+            MultiTokenMintNode.OnTransfer += TransferToken;
+
             _nodeContractStyle = new GUIStyle();
             _nodeContractStyle.normal.background = EditorGUIUtility.Load("node0") as Texture2D;
             _nodeContractStyle.normal.textColor  = Color.white;
-            _nodeContractStyle.padding = new RectOffset(20, 20, 20, 20);
-            _nodeContractStyle.border  = new RectOffset(12, 12, 12, 12);
+            _nodeContractStyle.padding = new RectOffset(30, 30, 30, 30);
+            _nodeContractStyle.border  = new RectOffset(18, 18, 18, 18);
+            _nodeContractStyle.fixedHeight *= 1.1f;
+            _nodeContractStyle.fixedWidth  *= 1.1f;
 
             _nodeDeployedContractStyle = new GUIStyle();
             _nodeDeployedContractStyle.normal.background = EditorGUIUtility.Load("node1") as Texture2D;
             _nodeDeployedContractStyle.normal.textColor  = Color.white;
-            _nodeDeployedContractStyle.padding = new RectOffset(20, 20, 20, 20);
-            _nodeDeployedContractStyle.border  = new RectOffset(12, 12, 12, 12);
+            _nodeDeployedContractStyle.padding = new RectOffset(30, 30, 30, 30);
+            _nodeDeployedContractStyle.border  = new RectOffset(18, 18, 18, 18);
+            _nodeDeployedContractStyle.fixedHeight *= 1.1f;
+            _nodeDeployedContractStyle.fixedWidth  *= 1.1f;
 
             _nodeTokenStyle = new GUIStyle();
             _nodeTokenStyle.normal.background = EditorGUIUtility.Load("node0") as Texture2D;
@@ -123,7 +132,13 @@ namespace Nethereum.Unity.Editors.MultiToken
             _nodeDeployedTokenStyle.normal.background = EditorGUIUtility.Load("node2") as Texture2D;
             _nodeDeployedTokenStyle.normal.textColor = Color.white;
             _nodeDeployedTokenStyle.padding = new RectOffset(20, 20, 20, 20);
-            _nodeDeployedTokenStyle.border  = new RectOffset(12, 12, 12, 12);            
+            _nodeDeployedTokenStyle.border  = new RectOffset(12, 12, 12, 12);
+
+            _nodeDeployedNFTStyle = new GUIStyle();
+            _nodeDeployedNFTStyle.normal.background = EditorGUIUtility.Load("node6") as Texture2D;
+            _nodeDeployedNFTStyle.normal.textColor = Color.white;
+            _nodeDeployedNFTStyle.padding = new RectOffset(20, 20, 20, 20);
+            _nodeDeployedNFTStyle.border = new RectOffset(12, 12, 12, 12);
         }
 
         private void OnSelectionChanged() 
@@ -337,7 +352,7 @@ namespace Nethereum.Unity.Editors.MultiToken
 
             GUIStyle currentStyle =
                 !isContractNode ? 
-                    (node.IsDeployed ? _nodeDeployedTokenStyle : _nodeTokenStyle) : 
+                    (node.IsDeployed ? GetMintNodeDeployedDrawStyle((MultiTokenMintNode) node) : _nodeTokenStyle) : 
                     (node.IsDeployed ? _nodeDeployedContractStyle : _nodeContractStyle);
 
             GUILayout.BeginArea(node.GetRect(), currentStyle);
@@ -374,6 +389,13 @@ namespace Nethereum.Unity.Editors.MultiToken
             else
             {
                 var mintNode = (MultiTokenMintNode) node;
+
+                if ((mintNode.IsDeployed) && mintNode.IsNFT())
+                {
+                    GUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField("NFT");
+                    GUILayout.EndHorizontal();
+                }
 
                 var oldTokenName = mintNode.TokenName;
                 var newTokenName = EditorGUILayout.TextField(oldTokenName);
@@ -415,6 +437,11 @@ namespace Nethereum.Unity.Editors.MultiToken
             var absoluteMousePosition = mousePosition;
 
             return _selectedContract.GetAllNodes().LastOrDefault(x => x.GetRect().Contains(absoluteMousePosition));
+        }
+
+        private GUIStyle GetMintNodeDeployedDrawStyle(MultiTokenMintNode mintNode)
+        {
+            return mintNode.IsNFT() ? _nodeDeployedNFTStyle : _nodeDeployedTokenStyle;
         }
 
         private IContractTransactionUnityRequest GetTransactionUnityRequest(MultiTokenContract contract)
@@ -515,6 +542,32 @@ namespace Nethereum.Unity.Editors.MultiToken
             else
             {
                 Debug.Log("DEBUG: MintToken() cannot be invoked properly since the selected contract is NULL.");
+            }
+        }
+
+        private async void TransferToken(MultiTokenMintNode mintNode, string newOwner)
+        {
+            if (_selectedContract != null)
+            {
+                var transfer = 
+                    await _selectedContract
+                          .MultiTokenService
+                          .SafeTransferFromRequestAndWaitForReceiptAsync(mintNode.TokenOwnerAddress, newOwner, mintNode.TokenId, 1, new byte[] { });
+
+                if ((bool) transfer.HasErrors())
+                {
+                    Debug.Log("DEBUG: Transfer of tokens to target address failed.");
+                }
+
+                var balance = 
+                    await _selectedContract.MultiTokenService.BalanceOfQueryAsync(mintNode.TokenOwnerAddress, mintNode.TokenId);
+
+                Debug.Log("DEBUG: After transfer, the current balance of account (" + mintNode.TokenOwnerAddress + 
+                          ") for Game Token Id (" + mintNode.TokenId + ") is [" + balance + "]");
+            }
+            else
+            {
+                Debug.Log("DEBUG: TransferToken() cannot be invoked properly since the selected contract is NULL.");
             }
         }
     }

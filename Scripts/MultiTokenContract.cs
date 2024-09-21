@@ -4,8 +4,6 @@ using System.Linq;
 using UnityEngine;
 using UnityEditor;
 
-using Nethereum.Unity.Rpc;
-
 using Nethereum.Web3.Accounts;
 using Nethereum.Web3;
 using Nethereum.Signer;
@@ -17,7 +15,7 @@ using Nethereum.Contracts.UnityERC1155.ContractDefinition;
 using Org.BouncyCastle.Crypto.Tls;
 using Nethereum.Contracts.Standards.ERC1155;
 
-namespace Nethereum.Unity.Editors.MultiToken
+namespace Nethereum.Unity.MultiToken
 {
     [CreateAssetMenu(fileName = "New MultiToken Contract", menuName = "Ethereum/Multitoken Contract", order = 0)]
     public class MultiTokenContract : ScriptableObject, ISerializationCallbackReceiver
@@ -34,8 +32,8 @@ namespace Nethereum.Unity.Editors.MultiToken
         [SerializeField]
         private long _maxTokenId = 1; //Nethereum test chain, chainId
 
-        private Account _account = null;
-        private Web3.Web3 _web3 = null;
+        private Account   _account = null;
+        private Web3.Web3 _web3    = null;
 
         private UnityERC1155Service _erc1155Service = null;
 

@@ -5,7 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using System;
 
-namespace Nethereum.Unity.Editors.MultiToken
+namespace Nethereum.Unity.MultiToken
 {
     public class MultiTokenNode : ScriptableObject
     {
