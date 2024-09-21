@@ -40,7 +40,7 @@ namespace Nethereum.Unity.MultiToken
         private long _initialTotalBalance = 0;
 
         [SerializeField]
-        [OnChangedCall("onOwnersChanged")]
+        // [OnChangedCall("onOwnersChanged")]
         private List<string> _ownerAddresses = new List<string>();
 
         public string TokenSymbol { get { return _tokenSymbol; } }
@@ -67,6 +67,11 @@ namespace Nethereum.Unity.MultiToken
 
 
         #region UNITY EDITOR SECTION
+
+        public void AddTokenOwner(string tokenOwnerAddress)
+        {
+            _ownerAddresses.Add(tokenOwnerAddress);
+        }
 
         public void onOwnersChanged()
         {

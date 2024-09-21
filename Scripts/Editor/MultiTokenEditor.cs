@@ -67,6 +67,9 @@ namespace Nethereum.Unity.MultiToken
         MultiTokenNode _refreshingNode = null;
 
         [NonSerialized]
+        MultiTokenNode _requestingTransferNode = null;
+
+        [NonSerialized]
         MultiTokenNode _deletingNode = null;
 
         [NonSerialized]
@@ -79,6 +82,9 @@ namespace Nethereum.Unity.MultiToken
 
         [NonSerialized]
         Vector2 _draggingCanvasOffset;
+
+        [NonSerialized]
+        string _pendingTransferToAddress = null;
 
         [MenuItem("Window/Ethereum/MultiToken Editor")]
         public static void ShowEditorWindow()
@@ -224,7 +230,16 @@ namespace Nethereum.Unity.MultiToken
                 {
                     RefreshMintNode((MultiTokenMintNode) _refreshingNode);
                     _refreshingNode = null;
-                }                
+                }
+
+                if ((_requestingTransferNode != null) && (_requestingTransferNode is MultiTokenMintNode))
+                {
+                    string transferAddress = new string(_pendingTransferToAddress);
+                    TransferToken((MultiTokenMintNode) _requestingTransferNode, transferAddress);
+
+                    _requestingTransferNode   = null;
+                    _pendingTransferToAddress = null;
+                }
 
                 if (_deletingNode != null)
                 {
@@ -312,6 +327,11 @@ namespace Nethereum.Unity.MultiToken
                 _draggingCanvas       = false;
                 _draggingCanvasOffset = Vector2.zero;
             }
+        }
+
+        private long ConvertBigIntegerToLong(System.Numerics.BigInteger bigIntegerAmount)
+        {
+            return unchecked((long)(ulong)(bigIntegerAmount & ulong.MaxValue));
         }
 
         private void DrawLinkButton(MultiTokenNode targetNode)
@@ -427,6 +447,34 @@ namespace Nethereum.Unity.MultiToken
                 DrawLinkButton(node);
 
                 GUILayout.EndHorizontal();
+
+                if (mintNode.IsDeployed)
+                {
+                    GUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField("");
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField("");
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField("");
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.BeginHorizontal();
+                    _pendingTransferToAddress = EditorGUILayout.TextField(_pendingTransferToAddress);
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.BeginHorizontal();
+                    if (GUILayout.Button("Transfer"))
+                    {
+                        _requestingTransferNode = node;
+                    }
+                    GUILayout.EndHorizontal();
+                }
+
+                EditorUtility.SetDirty(node);
             }
 
             GUILayout.EndArea();            
@@ -451,6 +499,18 @@ namespace Nethereum.Unity.MultiToken
 
         private IEnumerator DeployErc1155Contract()
         {
+            if (_selectedContract == null)
+            {
+                Debug.Log("ERROR!  No contract has been selected for deployment.");
+                yield break;
+            }
+
+            if (String.IsNullOrEmpty(_selectedContract.GetRootNode().ContractName))
+            {
+                Debug.Log("ERROR!  Contract must have nickname provided before being deployed.");
+                yield break;
+            }
+
             var transactionRequest = GetTransactionUnityRequest(_selectedContract);
             transactionRequest.UseLegacyAsDefault = true;
 
@@ -532,7 +592,7 @@ namespace Nethereum.Unity.MultiToken
                 var balance =
                     await _selectedContract.MultiTokenService.BalanceOfQueryAsync(mintNode.TokenOwnerAddress, mintNode.TokenId);
 
-                long balanceNum = unchecked((long)(ulong)(balance & ulong.MaxValue));
+                long balanceNum = ConvertBigIntegerToLong(balance);
 
                 Debug.Log("DEBUG: The current balance of ERC1155 contract at (" + _erc1155ContractMap[_selectedContract.GetRootNode().ContractName] +
                           ") for Game Token Id (" + mintNode.TokenId + ") is [" + balanceNum + "]");
@@ -549,6 +609,8 @@ namespace Nethereum.Unity.MultiToken
         {
             if (_selectedContract != null)
             {
+                Debug.Log("DEBUG: TransferToken() -> Request for transfer of token (" + mintNode.TokenName + ") to address [" + newOwner + "].");
+
                 var transfer = 
                     await _selectedContract
                           .MultiTokenService
@@ -559,11 +621,9 @@ namespace Nethereum.Unity.MultiToken
                     Debug.Log("DEBUG: Transfer of tokens to target address failed.");
                 }
 
-                var balance = 
-                    await _selectedContract.MultiTokenService.BalanceOfQueryAsync(mintNode.TokenOwnerAddress, mintNode.TokenId);
+                mintNode.AddTokenOwner(newOwner);
 
-                Debug.Log("DEBUG: After transfer, the current balance of account (" + mintNode.TokenOwnerAddress + 
-                          ") for Game Token Id (" + mintNode.TokenId + ") is [" + balance + "]");
+                RefreshMintNode(mintNode);
             }
             else
             {
