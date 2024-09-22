@@ -238,7 +238,7 @@ namespace Nethereum.Unity.MultiToken
                     TransferToken((MultiTokenMintNode) _requestingTransferNode, transferAddress);
 
                     _requestingTransferNode   = null;
-                    _pendingTransferToAddress = null;
+                    _pendingTransferToAddress = string.Empty;
                 }
 
                 if (_deletingNode != null)
@@ -463,7 +463,9 @@ namespace Nethereum.Unity.MultiToken
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
-                    _pendingTransferToAddress = EditorGUILayout.TextField(_pendingTransferToAddress);
+                    var oldPendingTransferAddress = _pendingTransferToAddress;
+                    var newPendingTransferToAddress = EditorGUILayout.TextField(oldPendingTransferAddress);
+                    _pendingTransferToAddress = newPendingTransferToAddress;
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
@@ -575,6 +577,9 @@ namespace Nethereum.Unity.MultiToken
                           ") for Game Token Id (" + mintNode.TokenId + ") is [" + balance + "]");
 
                 mintNode.SetDeployedStatus(true);
+
+                long balanceNum = ConvertBigIntegerToLong(balance);
+                mintNode.SetTokenBalance(balanceNum);
             }
             else
             {
