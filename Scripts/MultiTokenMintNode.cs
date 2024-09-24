@@ -18,6 +18,9 @@ namespace Nethereum.Unity.MultiToken
         public static event TransferAction OnTransfer;
 
         [SerializeField]
+        private bool _isNFT;
+
+        [SerializeField]
         private long _tokenId;
 
         [SerializeField]
@@ -53,13 +56,15 @@ namespace Nethereum.Unity.MultiToken
 
         public long TokenBalance { get { return _totalBalance; } }
 
-        public bool IsNFT() { return (_initialTotalBalance == 1); }
+        public bool IsNFT() { return _isNFT; }
 
         public void SetTokenBalance(long newBalance)
         {
             if (_initialTotalBalance == 0)
             {
                 _initialTotalBalance = newBalance;
+
+                _isNFT = (_initialTotalBalance == 1);
             }
 
             _totalBalance = newBalance;
