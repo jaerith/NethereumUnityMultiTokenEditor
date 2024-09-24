@@ -73,10 +73,17 @@ namespace Nethereum.Unity.MultiToken
 
         #region UNITY EDITOR SECTION
 
-        public void AddTokenOwner(string tokenOwnerAddress)
+        public void AddTokenOwner(string tokenOwnerPublicAddress)
         {
-            _ownerAddresses.Add(tokenOwnerAddress);
+            _ownerAddresses.Add(tokenOwnerPublicAddress);
         }
+
+        public bool HasTokenOwner(string tokenOwnerPublicAddress) 
+        { 
+            return _ownerAddresses.Contains(tokenOwnerPublicAddress);
+        }
+
+        public IEnumerable GetTokenOwnerList() { return _ownerAddresses; }
 
         public void onOwnersChanged()
         {
