@@ -70,6 +70,9 @@ namespace Nethereum.Unity.MultiToken
         MultiTokenNode _requestingTransferNode = null;
 
         [NonSerialized]
+        MultiTokenNode _requestingBurnNode = null;
+
+        [NonSerialized]
         MultiTokenNode _deletingNode = null;
 
         [NonSerialized]
@@ -85,6 +88,9 @@ namespace Nethereum.Unity.MultiToken
 
         [NonSerialized]
         string _pendingTransferToAddress = null;
+
+        [NonSerialized]
+        string _pendingBurnAmount = null;
 
         [MenuItem("Window/Ethereum/MultiToken Editor")]
         public static void ShowEditorWindow()
@@ -239,6 +245,14 @@ namespace Nethereum.Unity.MultiToken
 
                     _requestingTransferNode   = null;
                     _pendingTransferToAddress = string.Empty;
+                }
+
+                if ((_requestingBurnNode != null) && (_requestingBurnNode is MultiTokenMintNode))
+                {
+                    BurnTokenAmount((MultiTokenMintNode) _requestingBurnNode, _pendingBurnAmount);
+
+                    _requestingBurnNode = null;
+                    _pendingBurnAmount  = string.Empty;
                 }
 
                 if (_deletingNode != null)
@@ -398,7 +412,7 @@ namespace Nethereum.Unity.MultiToken
                 }
                 else
                 {
-                    if (GUILayout.Button(">"))
+                    if (GUILayout.Button("Deploy"))
                     {
                         _deployingNode = node;
                     }
@@ -409,13 +423,6 @@ namespace Nethereum.Unity.MultiToken
             else
             {
                 var mintNode = (MultiTokenMintNode) node;
-
-                if ((mintNode.IsDeployed) && mintNode.IsNFT())
-                {
-                    GUILayout.BeginHorizontal();
-                    EditorGUILayout.LabelField("NFT");
-                    GUILayout.EndHorizontal();
-                }
 
                 var oldTokenName = mintNode.TokenName;
                 var newTokenName = EditorGUILayout.TextField(oldTokenName);
@@ -438,7 +445,7 @@ namespace Nethereum.Unity.MultiToken
                 }
                 else
                 {
-                    if (GUILayout.Button(">"))
+                    if (GUILayout.Button("Deploy"))
                     {
                         _mintingNode = node;
                     }
@@ -455,14 +462,6 @@ namespace Nethereum.Unity.MultiToken
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
-                    EditorGUILayout.LabelField("");
-                    GUILayout.EndHorizontal();
-
-                    GUILayout.BeginHorizontal();
-                    EditorGUILayout.LabelField("");
-                    GUILayout.EndHorizontal();
-
-                    GUILayout.BeginHorizontal();
                     var oldPendingTransferAddress = _pendingTransferToAddress;
                     var newPendingTransferToAddress = EditorGUILayout.TextField(oldPendingTransferAddress);
                     _pendingTransferToAddress = newPendingTransferToAddress;
@@ -472,6 +471,23 @@ namespace Nethereum.Unity.MultiToken
                     if (GUILayout.Button("Transfer"))
                     {
                         _requestingTransferNode = node;
+                    }
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField("");
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.BeginHorizontal();
+                    var oldPendingBurnAmount = _pendingBurnAmount;
+                    var newPendingBurnAmount = EditorGUILayout.TextField(oldPendingBurnAmount);
+                    _pendingBurnAmount = newPendingBurnAmount;                    
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.BeginHorizontal();
+                    if (GUILayout.Button("Burn"))
+                    {
+                        _requestingBurnNode = node;
                     }
                     GUILayout.EndHorizontal();
                 }
@@ -497,6 +513,42 @@ namespace Nethereum.Unity.MultiToken
         private IContractTransactionUnityRequest GetTransactionUnityRequest(MultiTokenContract contract)
         {
             return new TransactionSignedUnityRequest(contract.ChainUrl, contract.PrivateKey, contract.ChainId);
+        }
+
+        private async void BurnTokenAmount(MultiTokenMintNode mintNode, string requestedBurnAmount)
+        {
+            if (_selectedContract != null)
+            {
+                long burnAmount = 0;
+
+                Debug.Log("DEBUG: At ERC1155 contract at (" + _erc1155ContractMap[_selectedContract.GetRootNode().ContractName] +
+                          "), there was a 'burn' request issued for Game Token Id (" + mintNode.TokenId + ")");
+
+                if (!String.IsNullOrEmpty(requestedBurnAmount) && long.TryParse(requestedBurnAmount, out burnAmount))
+                {
+                    var burnReceipt =
+                        await _selectedContract.MultiTokenService.BurnRequestAndWaitForReceiptAsync(mintNode.TokenOwnerAddress, mintNode.TokenId, burnAmount);
+
+                    Debug.Log("DEBUG: The 'burn' request issued for Game Token Id (" + mintNode.TokenId + ") is complete.");
+
+                    var balance =
+                        await _selectedContract.MultiTokenService.BalanceOfQueryAsync(mintNode.TokenOwnerAddress, mintNode.TokenId);
+
+                    Debug.Log("DEBUG: The current balance of ERC1155 contract at (" + _erc1155ContractMap[_selectedContract.GetRootNode().ContractName] +
+                              ") for Game Token Id (" + mintNode.TokenId + ") is [" + balance + "] after the burn.");
+
+                    long balanceNum = ConvertBigIntegerToLong(balance);
+                    mintNode.SetTokenBalance(balanceNum);
+                }
+                else
+                {
+                    Debug.Log("ERROR!  Pending burn amount is blank or not a number.");
+                }
+            }
+            else
+            {
+                Debug.Log("DEBUG: BurnTokenAmount() cannot be invoked properly since the selected contract is NULL.");
+            }
         }
 
         private IEnumerator DeployErc1155Contract()
