@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 using UnityEngine;
 
+using Nethereum.Contracts.UnityERC1155;
 using Nethereum.Unity.MultiToken;
 
 namespace Nethereum.Unity.Behaviours
@@ -31,7 +32,9 @@ namespace Nethereum.Unity.Behaviours
 
         private Dictionary<string, long> tokenAmounts = new Dictionary<string, long>();
 
-        private void Awake()
+        public MultiTokenContract Contract { get { return _contract; } }
+
+        void Start()
         {
             Debug.Log("Debug: EAB (" + _name + ") has awakened!");
 
@@ -44,17 +47,55 @@ namespace Nethereum.Unity.Behaviours
                         var mintNode = (MultiTokenMintNode) node;
                         if (mintNode.HasTokenOwner(_publicAddress))
                         {
-                            _tokenMembershipSymbols.Add(mintNode.TokenSymbol);
-                            _tokenMembershipAmounts.Add(1);
-                            tokenAmounts[mintNode.TokenSymbol] = 1;
-
-                            // NOTE : Use Async method to update token amount
-
-                            Debug.Log("DEBUG: EAB (" + _name + ") is known to own (" + mintNode.TokenSymbol + ") tokens!");
+                            RefreshTokenAmount(this, mintNode);
                         }
                     }
                 }
             }
+        }
+
+        public async void RefreshTokenAmount(EthereumAccountBehaviour accountBehaviour, MultiTokenMintNode mintNode)
+        {
+            if (accountBehaviour != null)
+            {
+                var contractNode = accountBehaviour.Contract.GetRootNode();
+
+                var erc1155Service = UnityERC1155ServiceFactory.CreateService(_contract);
+
+                Debug.Log("DEBUG: At ERC1155 contract at (" + contractNode.ContractName +
+                          "), there was a minted token refresh issued for Game Token Id (" + mintNode.TokenId + 
+                          ") with a starting balance of [" + mintNode.InitialTokenBalance + "]");
+
+                var balance =
+                    await erc1155Service.BalanceOfQueryAsync(_publicAddress, mintNode.TokenId);
+
+                long balanceNum = UnityERC1155ServiceFactory.ConvertBigIntegerToLong(balance);
+
+                Debug.Log("DEBUG: The current balance of ERC1155 contract at (" + contractNode.ContractName +
+                          ") of Game Token Id (" + mintNode.TokenId + ") for EAB (" + _publicAddress + ") is [" + balanceNum + "]");
+
+                mintNode.SetTokenBalance(balanceNum);
+
+                _tokenMembershipSymbols.Add(mintNode.TokenSymbol);
+                _tokenMembershipAmounts.Add(balanceNum);
+
+                tokenAmounts[mintNode.TokenSymbol] = balanceNum;
+            }
+            else
+            {
+                Debug.Log("ERROR! UnityERC1155ServiceSingleton::RefreshTokenAmount() -> Provided behaviour is null.");
+            }
+        }
+
+        public void SetTokenBalance(string tokenSymbol, long newTokenBalance)
+        {
+            int tokenIndex = _tokenMembershipSymbols.IndexOf(tokenSymbol);
+            if (tokenIndex >= 0)
+            {
+                _tokenMembershipAmounts[tokenIndex] = newTokenBalance;
+
+                tokenAmounts[tokenSymbol] = newTokenBalance;
+            }            
         }
 
 #endif
