@@ -96,6 +96,8 @@ namespace Nethereum.Unity.MultiToken
 
         public long ChainId { get { return _chainId; } }
 
+        public string ContractAddress { get { return GetRootNode().ContractAddress; } }
+
         public IEnumerable<MultiTokenNode> GetAllChildren(MultiTokenNode parentNode)
         {
             foreach (var childId in parentNode.GetChildren())

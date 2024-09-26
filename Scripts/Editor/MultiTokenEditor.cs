@@ -8,11 +8,12 @@ using UnityEditor.Callbacks;
 using UnityEngine;
 using Unity.EditorCoroutines.Editor;
 
-using Nethereum.Contracts.UnityERC1155.ContractDefinition;
-using Nethereum.Unity.Rpc;
-using Nethereum.Signer;
-using Nethereum.Unity.Contracts;
 using Nethereum.Contracts.Standards.ERC1155;
+using Nethereum.Contracts.UnityERC1155;
+using Nethereum.Contracts.UnityERC1155.ContractDefinition;
+using Nethereum.Signer;
+using Nethereum.Unity.Rpc;
+using Nethereum.Unity.Contracts;
 
 namespace Nethereum.Unity.MultiToken
 {
@@ -343,11 +344,6 @@ namespace Nethereum.Unity.MultiToken
             }
         }
 
-        private long ConvertBigIntegerToLong(System.Numerics.BigInteger bigIntegerAmount)
-        {
-            return unchecked((long)(ulong)(bigIntegerAmount & ulong.MaxValue));
-        }
-
         private void DrawLinkButton(MultiTokenNode targetNode)
         {
             if ((_linkingParentNode != null) && (_linkingParentNode is MultiTokenContractNode))
@@ -537,7 +533,7 @@ namespace Nethereum.Unity.MultiToken
                     Debug.Log("DEBUG: The current balance of ERC1155 contract at (" + _erc1155ContractMap[_selectedContract.GetRootNode().ContractName] +
                               ") for Game Token Id (" + mintNode.TokenId + ") is [" + balance + "] after the burn.");
 
-                    long balanceNum = ConvertBigIntegerToLong(balance);
+                    long balanceNum = UnityERC1155ServiceFactory.ConvertBigIntegerToLong(balance);
                     mintNode.SetTokenBalance(balanceNum);
                 }
                 else
@@ -630,7 +626,7 @@ namespace Nethereum.Unity.MultiToken
 
                 mintNode.SetDeployedStatus(true);
 
-                long balanceNum = ConvertBigIntegerToLong(balance);
+                long balanceNum = UnityERC1155ServiceFactory.ConvertBigIntegerToLong(balance);
                 mintNode.SetTokenBalance(balanceNum);
             }
             else
@@ -649,7 +645,7 @@ namespace Nethereum.Unity.MultiToken
                 var balance =
                     await _selectedContract.MultiTokenService.BalanceOfQueryAsync(mintNode.TokenOwnerAddress, mintNode.TokenId);
 
-                long balanceNum = ConvertBigIntegerToLong(balance);
+                long balanceNum = UnityERC1155ServiceFactory.ConvertBigIntegerToLong(balance);
 
                 Debug.Log("DEBUG: The current balance of ERC1155 contract at (" + _erc1155ContractMap[_selectedContract.GetRootNode().ContractName] +
                           ") for Game Token Id (" + mintNode.TokenId + ") is [" + balanceNum + "]");
