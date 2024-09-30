@@ -40,6 +40,11 @@ namespace Nethereum.Unity.MultiToken
 
 #if UNITY_EDITOR
 
+        public void SetIsDeployed(bool isDeployed)
+        {
+            _isDeployed = isDeployed;
+        }
+
         public void SetRectPosition(Vector2 newPosition)
         {
             Undo.RecordObject(this, "Move Node");

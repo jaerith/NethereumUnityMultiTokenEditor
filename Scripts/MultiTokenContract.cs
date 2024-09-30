@@ -92,6 +92,8 @@ namespace Nethereum.Unity.MultiToken
 
         public string ChainUrl { get { return _chainUrl; } }
 
+        public string PublicAddress { get { return _account.Address; } }
+
         public string PrivateKey { get { return _privateKey; } }
 
         public long ChainId { get { return _chainId; } }
