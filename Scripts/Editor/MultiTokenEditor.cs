@@ -59,6 +59,9 @@ namespace Nethereum.Unity.MultiToken
         MultiTokenNode _deployingNode = null;
 
         [NonSerialized]
+        MultiTokenNode _connectingNode = null;
+
+        [NonSerialized]
         MultiTokenNode _mintingNode = null;
 
         [NonSerialized]
@@ -92,6 +95,12 @@ namespace Nethereum.Unity.MultiToken
 
         [NonSerialized]
         string _pendingBurnAmount = null;
+
+        [NonSerialized]
+        System.Numerics.BigInteger _tokenIdRangeMinimum = 1;
+
+        [NonSerialized]
+        System.Numerics.BigInteger _tokenIdRangeMaximum = 10;
 
         [MenuItem("Window/Ethereum/MultiToken Editor")]
         public static void ShowEditorWindow()
@@ -219,6 +228,13 @@ namespace Nethereum.Unity.MultiToken
                     EditorCoroutineUtility.StartCoroutine(DeployErc1155Contract(), this);
 
                     _deployingNode = null;
+                }
+
+                if (_connectingNode != null)
+                {
+                    ConnectErc1155Contract();
+
+                    _connectingNode = null;
                 }
 
                 if ((_mintingNode != null) && (_mintingNode is MultiTokenMintNode))
@@ -412,6 +428,11 @@ namespace Nethereum.Unity.MultiToken
                     {
                         _deployingNode = node;
                     }
+
+                    if (GUILayout.Button("Connect"))
+                    {
+                        _connectingNode = node;
+                    }
                 }
 
                 GUILayout.EndHorizontal();
@@ -545,6 +566,73 @@ namespace Nethereum.Unity.MultiToken
             {
                 Debug.Log("DEBUG: BurnTokenAmount() cannot be invoked properly since the selected contract is NULL.");
             }
+        }
+
+        private async void ConnectErc1155Contract()
+        {
+            if ((_selectedContract != null) && 
+                !String.IsNullOrEmpty(_selectedContract.GetRootNode().ContractName) &&
+                !String.IsNullOrEmpty(_selectedContract.GetRootNode().ContractAddress))
+            {
+                _selectedContract.InstantiateService(_selectedContract.GetRootNode().ContractAddress);
+
+                Debug.Log("DEBUG: ConnectErc1155Contract() -> ERC1155 Service (pointing at [" + _selectedContract.GetRootNode().ContractAddress + 
+                          "]) has been instantiated.");
+
+                _erc1155ContractNames.Add(_selectedContract.GetRootNode().ContractName);
+                _erc1155ContractAddresses.Add(_selectedContract.GetRootNode().ContractAddress);
+
+                _erc1155ContractMap[_selectedContract.GetRootNode().ContractName] = _selectedContract.GetRootNode().ContractAddress;
+
+                if (_connectingNode is MultiTokenContractNode)
+                {
+                    var contractNode = (MultiTokenContractNode) _connectingNode;
+
+                    contractNode.SetIsDeployed(true);
+
+                    if ((_tokenIdRangeMinimum > 0) && (_tokenIdRangeMaximum > 0) && (_tokenIdRangeMinimum < _tokenIdRangeMaximum))
+                    {
+                        var tokenOwnerBatch   = new List<string>();
+                        var tokenIdBatch      = new List<System.Numerics.BigInteger>();
+                        var tokenIdBalanceMap = new Dictionary<System.Numerics.BigInteger, System.Numerics.BigInteger>();
+
+                        for (System.Numerics.BigInteger tmpTokenId = _tokenIdRangeMinimum; tmpTokenId <= _tokenIdRangeMaximum; tmpTokenId++) 
+                        {
+                            tokenOwnerBatch.Add(_selectedContract.PublicAddress);
+                            tokenIdBatch.Add(tmpTokenId);
+                        }
+
+                        var tokenBalances = 
+                            await _selectedContract.MultiTokenService.BalanceOfBatchQueryAsync(tokenOwnerBatch, tokenIdBatch);
+
+                        for (int index = 0; index < tokenBalances.Count; index++)
+                        {
+                            tokenIdBalanceMap[tokenIdBatch[index]] = tokenBalances[index];
+
+                            Debug.Log("DEBUG: ConnectErc1155Contract() -> Balance found for Token Id (" + tokenIdBatch[index] + ") is: [" +
+                                      tokenBalances[index] + "].");
+                        }
+
+                        // NOTE: Create child (i.e., mint) nodes with balances
+                    }
+                }
+            }
+            else
+            {
+                if (_selectedContract == null)
+                {
+                    Debug.Log("ERROR!  No contract has been selected for connection.");
+                }
+                else if (String.IsNullOrEmpty(_selectedContract.GetRootNode().ContractAddress))
+                {
+                    Debug.Log("ERROR!  Contract must have address provided before being connected.");
+                }
+                else
+                {
+                    Debug.Log("ERROR!  Contract must have nickname provided before being connected.");
+                }
+            }
+            
         }
 
         private IEnumerator DeployErc1155Contract()
