@@ -119,6 +119,16 @@ namespace Nethereum.Unity.MultiToken
             _tokenId = newTokenId;
         }
 
+        public void SetTokenOwner(string tokenOwner)
+        {
+            _tokenOwnerAddress = tokenOwner;
+        }
+
+        public void SetTokenUrl(string tokenUrl)
+        {
+            _tokenMetadataUrl = tokenUrl;
+        }
+
         public void SetDeployedStatus(bool isDeployed)
         {
             _isDeployed = isDeployed;
