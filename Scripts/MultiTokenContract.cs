@@ -163,7 +163,7 @@ namespace Nethereum.Unity.MultiToken
             OnValidate();
         }
 
-        public void CreateNode(MultiTokenContractNode parent)
+        public MultiTokenNode CreateNode(MultiTokenContractNode parent)
         {
             var newChild = MakeNode(parent);
 
@@ -172,6 +172,8 @@ namespace Nethereum.Unity.MultiToken
             Undo.RecordObject(this, "Added Token Node");
 
             AddNode(newChild);
+
+            return newChild;
         }
 
         public void DeleteNode(MultiTokenNode targetNode)
