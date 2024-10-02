@@ -114,6 +114,11 @@ namespace Nethereum.Unity.MultiToken
             }
         }
 
+        public void SetTokenName(string newTokenName)
+        {
+            _tokenName = newTokenName;
+        }
+
         public void SetTokenId(long newTokenId)
         {
             _tokenId = newTokenId;
