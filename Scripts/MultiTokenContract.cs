@@ -167,6 +167,12 @@ namespace Nethereum.Unity.MultiToken
         {
             var newChild = MakeNode(parent);
 
+            if (newChild is MultiTokenMintNode)
+            {
+                var mintNode = (MultiTokenMintNode) newChild;
+                mintNode.SetTokenOwner(PublicAddress);
+            }
+
             Undo.RegisterCreatedObjectUndo(newChild, "Created Token Node");
 
             Undo.RecordObject(this, "Added Token Node");
@@ -206,7 +212,8 @@ namespace Nethereum.Unity.MultiToken
 
                 mintChild.SetTokenId(_maxTokenId++);
 
-                mintChild.SetRectPosition(parent.GetRect().position + NewNodeOffset);
+                mintChild.SetRectPosition(parent.GetRect().position + NewNodeOffset + 
+                                          new Vector2(150 * parent.GetChildren().Count, 150 * parent.GetChildren().Count));
 
                 parent.AddChild(mintChild.name);
             }
