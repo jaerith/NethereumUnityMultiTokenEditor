@@ -601,33 +601,41 @@ namespace Nethereum.Unity.MultiToken
                     var tokenBalances = 
                         await _selectedContract.MultiTokenService.BalanceOfBatchQueryAsync(tokenOwnerBatch, tokenIdBatch);
 
-                    for (int index = 0; index < tokenBalances.Count; index++)
-                    {
-                        var tokenId      = tokenIdBatch[index];
-                        var tokenBalance = tokenBalances[index];
-
-                        tokenIdBalanceMap[tokenId] = tokenBalance;
-
-                        Debug.Log("DEBUG: ConnectErc1155Contract() -> Balance found for Token Id (" + tokenIdBatch[index] + ") is: [" +
-                                    tokenBalances[index] + "].");
-
-                        if (tokenBalance > 0)
+                    if (tokenBalances != null) 
+                    { 
+                        for (int index = 0; index < tokenBalances.Count; index++)
                         {
-                            var childNode = _selectedContract.CreateNode(contractNode);
+                            var tokenId      = tokenIdBatch[index];
+                            var tokenBalance = tokenBalances[index];
 
-                            if (childNode is MultiTokenMintNode)
+                            tokenIdBalanceMap[tokenId] = tokenBalance;
+
+                            Debug.Log("DEBUG: ConnectErc1155Contract() -> Balance found for Token Id (" + tokenIdBatch[index] + ") is: [" +
+                                        tokenBalances[index] + "].");
+
+                            if (tokenBalance > 0)
                             {
-                                var mintNode = (MultiTokenMintNode)childNode;                                
+                                var childNode = _selectedContract.CreateNode(contractNode);
 
-                                mintNode.SetTokenId(UnityERC1155ServiceFactory.ConvertBigIntegerToLong(tokenIdBatch[index]));
-                                mintNode.SetTokenBalance(UnityERC1155ServiceFactory.ConvertBigIntegerToLong(tokenBalances[index]));
-                                mintNode.SetIsDeployed(true);
-                                mintNode.SetTokenOwner(_selectedContract.PublicAddress);
+                                if (childNode is MultiTokenMintNode)
+                                {
+                                    var mintNode = (MultiTokenMintNode)childNode;
 
-                                var mintNodeUri = await _selectedContract.MultiTokenService.UriQueryAsync(tokenId);
-                                mintNode.SetTokenUrl(mintNodeUri);
+                                    mintNode.SetTokenName("Token " + tokenId);
+                                    mintNode.SetTokenId(UnityERC1155ServiceFactory.ConvertBigIntegerToLong(tokenIdBatch[index]));
+                                    mintNode.SetTokenBalance(UnityERC1155ServiceFactory.ConvertBigIntegerToLong(tokenBalances[index]));
+                                    mintNode.SetIsDeployed(true);
+                                    mintNode.SetTokenOwner(_selectedContract.PublicAddress);
+
+                                    var mintNodeUri = await _selectedContract.MultiTokenService.UriQueryAsync(tokenId);
+                                    mintNode.SetTokenUrl(mintNodeUri);
+                                }
                             }
                         }
+                    }
+                    else
+                    {
+                        System.Console.WriteLine("ERROR!  ConnectErc1155Contract() -> Balances returned from token service was null.");
                     }
                 }
             }
