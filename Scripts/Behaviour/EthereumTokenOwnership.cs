@@ -5,10 +5,22 @@ using UnityEngine;
 
 namespace Nethereum.Unity.Behaviours
 {
-    public class EthereumTokenOwnership
-    {        
-        public long TokenId;
+    public class EthereumTokenOwnership : ScriptableObject
+    {
+        [SerializeField]
+        private long TokenId;
 
-        public long TokenBalance;
+        [SerializeField]
+        private long TokenBalance;
+
+        [SerializeField]
+        private long TotalTokenSupply;
+
+        public EthereumTokenOwnership(long tokenId, long tokenBalance, long tokenSupply)
+        {
+            TokenId          = tokenId;
+            TokenBalance     = tokenBalance;
+            TotalTokenSupply = tokenSupply;
+        }
     }
 }

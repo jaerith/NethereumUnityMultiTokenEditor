@@ -25,10 +25,10 @@ namespace Nethereum.Unity.Behaviours
         private MultiTokenContract _contract = null;
 
         [SerializeField]
-        private List<string> _tokenMembershipSymbols = new List<string>();
+        private List<string> _tokenOwnershipDescriptions = new List<string>();
 
         [SerializeField]
-        private List<long> _tokenMembershipAmounts = new List<long>();
+        private List<EthereumTokenOwnership> _tokenOwnerships = new List<EthereumTokenOwnership>();
 
         private Dictionary<string, long> tokenAmounts = new Dictionary<string, long>();
 
@@ -37,6 +37,9 @@ namespace Nethereum.Unity.Behaviours
         void Start()
         {
             Debug.Log("Debug: EAB (" + _name + ") has awakened!");
+
+            _tokenOwnershipDescriptions.Clear();
+            _tokenOwnerships.Clear();
 
             if (_contract != null)
             {
@@ -69,15 +72,20 @@ namespace Nethereum.Unity.Behaviours
                 var balance =
                     await erc1155Service.BalanceOfQueryAsync(_publicAddress, mintNode.TokenId);
 
-                long balanceNum = UnityERC1155ServiceFactory.ConvertBigIntegerToLong(balance);
+                var totalBalance = await erc1155Service.TotalSupplyQueryAsync(mintNode.TokenId);
+
+                long balanceNum      = UnityERC1155ServiceFactory.ConvertBigIntegerToLong(balance);
+                long tokenIdNum      = UnityERC1155ServiceFactory.ConvertBigIntegerToLong(mintNode.TokenId);
+                long totalBalanceNum = UnityERC1155ServiceFactory.ConvertBigIntegerToLong(totalBalance);
 
                 Debug.Log("DEBUG: The current balance of ERC1155 contract at (" + contractNode.ContractName +
                           ") of Game Token Id (" + mintNode.TokenId + ") for EAB (" + _publicAddress + ") is [" + balanceNum + "]");
 
                 mintNode.SetTokenBalance(balanceNum);
 
-                _tokenMembershipSymbols.Add(mintNode.TokenSymbol);
-                _tokenMembershipAmounts.Add(balanceNum);
+                _tokenOwnershipDescriptions.Add("Token (" + mintNode.TokenId + ") -> Balance: [" + balanceNum + "]");
+
+                _tokenOwnerships.Add(new EthereumTokenOwnership(tokenIdNum, balanceNum, totalBalanceNum));
 
                 tokenAmounts[mintNode.TokenSymbol] = balanceNum;
             }
@@ -85,17 +93,6 @@ namespace Nethereum.Unity.Behaviours
             {
                 Debug.Log("ERROR! UnityERC1155ServiceSingleton::RefreshTokenAmount() -> Provided behaviour is null.");
             }
-        }
-
-        public void SetTokenBalance(string tokenSymbol, long newTokenBalance)
-        {
-            int tokenIndex = _tokenMembershipSymbols.IndexOf(tokenSymbol);
-            if (tokenIndex >= 0)
-            {
-                _tokenMembershipAmounts[tokenIndex] = newTokenBalance;
-
-                tokenAmounts[tokenSymbol] = newTokenBalance;
-            }            
         }
 
 #endif
