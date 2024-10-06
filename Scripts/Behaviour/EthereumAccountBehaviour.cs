@@ -6,6 +6,7 @@ using UnityEngine;
 
 using Nethereum.Contracts.UnityERC1155;
 using Nethereum.Unity.MultiToken;
+using UnityEditor;
 
 namespace Nethereum.Unity.Behaviours
 {
@@ -30,16 +31,26 @@ namespace Nethereum.Unity.Behaviours
         [SerializeField]
         private List<EthereumTokenOwnership> _tokenOwnerships = new List<EthereumTokenOwnership>();
 
-        private Dictionary<string, long> tokenAmounts = new Dictionary<string, long>();
+        [SerializeField]
+        private int _refreshTokenIntervalInSeconds = 15;
+
+        [SerializeField]
+        private AudioSource _audioSourceTokenUpdated = null;
+
+        private Dictionary<System.Numerics.BigInteger, long> _tokenIdAmounts = new Dictionary<System.Numerics.BigInteger, long>();
+
+        private Dictionary<string, long> _tokenSymbolAmounts = new Dictionary<string, long>();
 
         public MultiTokenContract Contract { get { return _contract; } }
+
+        private float timePassedInSeconds = 0.0f;
+        private int   lastTimeThreshold   = 0;
 
         void Start()
         {
             Debug.Log("Debug: EAB (" + _name + ") has awakened!");
 
-            _tokenOwnershipDescriptions.Clear();
-            _tokenOwnerships.Clear();
+            ResetOwnershipProperties();
 
             if (_contract != null)
             {
@@ -50,18 +61,60 @@ namespace Nethereum.Unity.Behaviours
                         var mintNode = (MultiTokenMintNode) node;
                         if (mintNode.HasTokenOwner(_publicAddress))
                         {
-                            RefreshTokenAmount(this, mintNode);
+                            RefreshTokenAmount(mintNode);
                         }
                     }
                 }
             }
         }
 
-        public async void RefreshTokenAmount(EthereumAccountBehaviour accountBehaviour, MultiTokenMintNode mintNode)
+        // Update is called once per frame
+        void Update()
         {
-            if (accountBehaviour != null)
+            AdjustTimer();
+        }
+
+        private void AdjustTimer()
+        {
+            timePassedInSeconds += Time.deltaTime;
+
+            int timePassed = (int) timePassedInSeconds;
+            if ((timePassed > 1) && (timePassed > lastTimeThreshold) && ((timePassed % _refreshTokenIntervalInSeconds) == 0))
             {
-                var contractNode = accountBehaviour.Contract.GetRootNode();
+                lastTimeThreshold = timePassed;
+
+                RefreshAllTokenAmounts();
+            }
+        }
+
+        public void RefreshAllTokenAmounts()
+        {
+            if (_contract != null)
+            {
+                ResetOwnershipProperties();
+
+                Debug.Log("DEBUG: EthereumAccountBehaviour::RefreshAllTokenAmounts() -> Refreshing all minted token balances owned by account (" +
+                          PublicAddress + ").");
+
+                foreach (var node in _contract.GetAllNodes())
+                {
+                    if (node.IsDeployed && (node is MultiTokenMintNode))
+                    {
+                        var mintNode = (MultiTokenMintNode)node;
+                        if (mintNode.HasTokenOwner(_publicAddress))
+                        {
+                            RefreshTokenAmount(mintNode);
+                        }
+                    }
+                }
+            }
+        }
+
+        public async void RefreshTokenAmount(MultiTokenMintNode mintNode)
+        {
+            if (Contract != null)
+            {
+                var contractNode = Contract.GetRootNode();
 
                 var erc1155Service = UnityERC1155ServiceFactory.CreateService(_contract);
 
@@ -74,6 +127,7 @@ namespace Nethereum.Unity.Behaviours
 
                 var totalBalance = await erc1155Service.TotalSupplyQueryAsync(mintNode.TokenId);
 
+                long currBalanceNum  = _tokenIdAmounts.ContainsKey(mintNode.TokenId) ? _tokenIdAmounts[mintNode.TokenId] : 0;
                 long balanceNum      = UnityERC1155ServiceFactory.ConvertBigIntegerToLong(balance);
                 long tokenIdNum      = UnityERC1155ServiceFactory.ConvertBigIntegerToLong(mintNode.TokenId);
                 long totalBalanceNum = UnityERC1155ServiceFactory.ConvertBigIntegerToLong(totalBalance);
@@ -81,18 +135,29 @@ namespace Nethereum.Unity.Behaviours
                 Debug.Log("DEBUG: The current balance of ERC1155 contract at (" + contractNode.ContractName +
                           ") of Game Token Id (" + mintNode.TokenId + ") for EAB (" + _publicAddress + ") is [" + balanceNum + "]");
 
-                mintNode.SetTokenBalance(balanceNum);
+                if ((balanceNum != currBalanceNum) && (_audioSourceTokenUpdated != null))
+                {
+                    _audioSourceTokenUpdated.Play();
+                }
 
                 _tokenOwnershipDescriptions.Add("Token (" + mintNode.TokenId + ") -> Balance: [" + balanceNum + "]");
 
-                _tokenOwnerships.Add(new EthereumTokenOwnership(tokenIdNum, balanceNum, totalBalanceNum));
+                _tokenOwnerships.Add(ScriptableObject.CreateInstance<EthereumTokenOwnership>().Init(tokenIdNum, balanceNum, totalBalanceNum));
 
-                tokenAmounts[mintNode.TokenSymbol] = balanceNum;
+                _tokenIdAmounts[mintNode.TokenId] = balanceNum;
+
+                _tokenSymbolAmounts[mintNode.TokenSymbol] = balanceNum;
             }
             else
             {
-                Debug.Log("ERROR! UnityERC1155ServiceSingleton::RefreshTokenAmount() -> Provided behaviour is null.");
+                Debug.Log("ERROR! EthereumAccountBehaviour::RefreshTokenAmount() -> Contract is null.");
             }
+        }
+
+        private void ResetOwnershipProperties()
+        {
+            _tokenOwnershipDescriptions.Clear();
+            _tokenOwnerships.Clear();
         }
 
 #endif

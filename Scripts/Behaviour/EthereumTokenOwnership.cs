@@ -16,11 +16,15 @@ namespace Nethereum.Unity.Behaviours
         [SerializeField]
         private long TotalTokenSupply;
 
-        public EthereumTokenOwnership(long tokenId, long tokenBalance, long tokenSupply)
+        public EthereumTokenOwnership() { }
+
+        public EthereumTokenOwnership Init(long tokenId, long tokenBalance, long tokenSupply)
         {
             TokenId          = tokenId;
             TokenBalance     = tokenBalance;
             TotalTokenSupply = tokenSupply;
+
+            return this;
         }
     }
 }
