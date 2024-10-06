@@ -11,9 +11,11 @@ namespace Nethereum.Contracts.UnityERC1155
 {
     public class UnityERC1155ServiceFactory : MonoBehaviour
     {
-        static public UnityERC1155Service CreateService(MultiTokenContract contract)
+        static public UnityERC1155Service CreateService(MultiTokenContract contract, string privateKey = null)
         {
-            var account = new Account(contract.PrivateKey, contract.ChainId);
+            var accountPrivateKey = !string.IsNullOrEmpty(privateKey) ? privateKey : contract.PrivateKey;
+
+            var account = new Account(accountPrivateKey, contract.ChainId);
 
             var web3 = new Web3.Web3(account, contract.ChainUrl);
             web3.TransactionManager.UseLegacyAsDefault = true; //Using legacy option instead of 1559
