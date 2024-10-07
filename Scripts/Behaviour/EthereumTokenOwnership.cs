@@ -8,23 +8,32 @@ namespace Nethereum.Unity.Behaviours
     public class EthereumTokenOwnership : ScriptableObject
     {
         [SerializeField]
-        private long TokenId;
+        private long _tokenId;
 
         [SerializeField]
-        private long TokenBalance;
+        private long _tokenBalance;
 
         [SerializeField]
-        private long TotalTokenSupply;
+        private long _totalTokenSupply;
+
+        private EthereumAccountBehaviour _accountBehaviour;
 
         public EthereumTokenOwnership() { }
 
-        public EthereumTokenOwnership Init(long tokenId, long tokenBalance, long tokenSupply)
+        public EthereumTokenOwnership Init(EthereumAccountBehaviour accountBehaviour, long tokenId, long tokenBalance, long tokenSupply)
         {
-            TokenId          = tokenId;
-            TokenBalance     = tokenBalance;
-            TotalTokenSupply = tokenSupply;
+            _accountBehaviour = accountBehaviour;
+
+            _tokenId          = tokenId;
+            _tokenBalance     = tokenBalance;
+            _totalTokenSupply = tokenSupply;
 
             return this;
+        }
+
+        public void RefundToken()
+        {
+            _accountBehaviour.RefundOwnedTokens(_tokenId, _tokenBalance);
         }
     }
 }

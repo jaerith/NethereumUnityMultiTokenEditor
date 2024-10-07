@@ -149,7 +149,7 @@ namespace Nethereum.Unity.Behaviours
 
                 _tokenOwnershipDescriptions.Add("Token (" + mintNode.TokenId + ") -> Balance: [" + balanceNum + "]");
 
-                _tokenOwnerships.Add(ScriptableObject.CreateInstance<EthereumTokenOwnership>().Init(tokenIdNum, balanceNum, totalBalanceNum));
+                _tokenOwnerships.Add(ScriptableObject.CreateInstance<EthereumTokenOwnership>().Init(this, tokenIdNum, balanceNum, totalBalanceNum));
 
                 _tokenIdAmounts[mintNode.TokenId] = balanceNum;
 
@@ -161,11 +161,44 @@ namespace Nethereum.Unity.Behaviours
             }
         }
 
+        public async void RefundOwnedTokens(long tokenId, long tokenBalance)
+        {
+            if (_contract != null)
+            {
+                var tokenIdBig      = (System.Numerics.BigInteger) tokenId;
+                var tokenBalanceBig = (System.Numerics.BigInteger) tokenBalance;
+
+                Debug.Log("DEBUG: EthereumAccountBehaviour::RefundOwnedTokens() -> Refunding [" + tokenBalanceBig + "] tokens of Token ID (" +
+                          tokenIdBig + ") that are owned by address (" + PublicAddress + ").");
+
+                var erc1155Service = UnityERC1155ServiceFactory.CreateService(_contract, _privateKey);
+
+                foreach (var node in _contract.GetAllNodes())
+                {
+                    if (node.IsDeployed && (node is MultiTokenMintNode))
+                    {
+                        var mintNode = (MultiTokenMintNode)node;
+
+                        if (mintNode.HasTokenOwner(_publicAddress) && (mintNode.TokenId == tokenIdBig))
+                        {
+                            var transfer =
+                                await erc1155Service
+                                      .SafeTransferFromRequestAndWaitForReceiptAsync(_publicAddress, mintNode.TokenOwnerAddress, mintNode.TokenId, tokenBalanceBig, new byte[] { });
+
+                            break;
+                        }
+                    }
+                }
+
+                RefreshAllTokenAmounts();
+            }
+        }
+
         public async void RefundAllOwnedTokens()
         {
             if (_contract != null)
             {
-                Debug.Log("DEBUG: EthereumAccountBehaviour::RefreshAllTokenAmounts() -> Refreshing all minted token balances owned by account (" +
+                Debug.Log("DEBUG: EthereumAccountBehaviour::RefundAllOwnedTokens() -> Refunding all tokens owned by address (" +
                           PublicAddress + ").");
 
                 var erc1155Service = UnityERC1155ServiceFactory.CreateService(_contract, _privateKey);
