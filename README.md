@@ -14,7 +14,7 @@ The general assumption of this project is that a proper game would have a framew
 
 2.) Providing transparecy to token ownerships and dispersements within the Unity IDE, so that they don't have to switch to another window (like a browser with Metamask) in order to observe tokens transfers and balances
 
-### Prerequisites
+## Prerequisites
 
 * Visual Studio 2019 (minimum)
 * Unity Editor 2022.2.18 (minimum)
@@ -25,7 +25,7 @@ In addition to these tools, the user should have a basic understanding of Ethere
 
 By default, the contracts are pointed to a test chain (restarted every few minutes) that is run by the Nethereum project.  However, for novices, you are encouraged to run your own test chain.  And if you're an Ethereum pro ready with a L2 or your own L3, even better!
 
-### Using the Multi Token Editor
+## Using the Multi Token Editor
 
 After placing the repo classes in a subfolder of Assets in the Unity project, the user will then be able to start by opening the Editor window via the menu path "Window -> Ethereum ->MultiToken Editor". 
 </br>
@@ -41,25 +41,25 @@ Once the window has been opened and moved to a convenient location, one can star
 
 </br>
 
-#### Deploying a ERC-1155 Contract
+### Deploying a ERC-1155 Contract
 
 In the Editor window, the user can either deploy an ERC-1155 contract or connect to an existing one via the Contract node.  Once it has been connected to the contract, it will change its color to blue, indicating the connection is live.  
-
-Once the connection has been made, the user can now create Token nodes in a Pending status.  Once the properties are set via the Inspector window, the tokens can be minted.  Upon completion, the node will change to a different color to indicate success: red for NFTs (i.e., ERC-721) and light blue for fungible tokens (i.e., ERC-20).
-</br>
 
 ![Deployed Contract](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Screenshots/MultiTokenEditor_ContractNode_AfterDeployment.png)
 
 </br>
 
-#### Minting a ERC-1155 Token
+### Minting a ERC-1155 Token
+
+Once the connection has been made, the user can now create Token nodes in a Pending status.  Once the properties are set via the Inspector window, the tokens can be minted.  Upon completion, the node will change to a different color to indicate success: red for NFTs (i.e., ERC-721) and light blue for fungible tokens (i.e., ERC-20).
+</br>
 
 ![Minted NFT](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Screenshots/MultiTokenEditor_NFT_Node_AfterMint.png)
 
-#### Transferring a ERC-1155 Token
+### Transferring a ERC-1155 Token
 
 ![Trasferred a token](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Screenshots/MultiTokenEditor_TokenNode_AfterTransfer.png)
 
-### Using Ethereum Account Behaviour
+## Using Ethereum Account Behaviour
 
 ![Ethereum Account Behaviour Attached](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Screenshots/EAB_Properties_Gameplay_Update.png)
