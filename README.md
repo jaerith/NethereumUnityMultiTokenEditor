@@ -51,15 +51,40 @@ In the Editor window, the user can either deploy an ERC-1155 contract or connect
 
 ### Minting a ERC-1155 Token
 
-Once the connection has been made, the user can now create Token nodes in a Pending status.  Once the properties are set via the Inspector window, the tokens can be minted.  Upon completion, the node will change to a different color to indicate success: red for NFTs (i.e., ERC-721) and light blue for fungible tokens (i.e., ERC-20).
+Once the connection has been made, the user can now create Token nodes in a Pending status.  Once the properties are set via the Inspector window, the tokens can be minted.  Upon completion, the node will change to a different color to indicate success: red for NFTs (i.e., [ERC-721](https://ethereum.org/en/developers/docs/standards/tokens/erc-721/)) and light blue for fungible tokens (i.e., [ERC-20](https://ethereum.org/en/developers/docs/standards/tokens/erc-20/)).
 </br>
 
 ![Minted NFT](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Screenshots/MultiTokenEditor_NFT_Node_AfterMint.png)
 
+</br>
+
 ### Transferring a ERC-1155 Token
+
+Now the minted tokens can be transferred or burned.  If there any game development scenarios where certain EOA accounts are assigned to NPCs, then the tokens can be dispersed here in the Editor window.
 
 ![Trasferred a token](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Screenshots/MultiTokenEditor_TokenNode_AfterTransfer.png)
 
+</br>
+
 ## Using Ethereum Account Behaviour
 
+With the introduction of Ethereum tokens to any game, they will likely be attached to players, but they might also be attached to NPCs (or even in-game objects).  In all cases, an [EOA](https://ethereum.org/en/developers/docs/accounts/) is required to receive these tokens.  By attaching the [Ethereum Account Behaviour](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Scripts/Behaviour/EthereumAccountBehaviour.cs) script to a game object (player, NPC, or other type of asset) and then providing the right configuration (namely its EOA and the target ERC-1155 contract), the developer can observe the tokens that are received and then held by the account while the game is running within the Unity IDE.
+
 ![Ethereum Account Behaviour Attached](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Screenshots/EAB_Properties_Gameplay_Update.png)
+
+The properties of an Ethereum Account Behaviour instance are displayed in the Inspector window, which are:
+
+* Token Ownership Descriptions - lists a brief overview of the tokens owned by the account
+* Token Ownerships - lists a collection of objects with more details about the owned tokens
+* Refresh Token Interval in Seconds - the time between polling the contract for updates about the token balances
+* Audio Source Token Updated (optional) - the provided audio clip that will play when any token balance has changed
+
+In addition, there is a Refresh All Tokens button, which will return all tokens (owned by the contract) to the original pool of the contract owner.  This functionality might be helpful to the game developer who wishes to test/debug a scenario repeatedly where tokens are dispersed based on a game action.
+
+<br/>
+If the developer only wants to return one type of token, they can double-click the corresponding item in the Token Ownerships list.  In the resulting Inspector window for that object, there will be a Refresh Token button:
+
+<br/>
+<br/>
+
+![Ethereum Token Ownership Attached](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Screenshots/EOT_Properties_Gameplay_Update.png)
