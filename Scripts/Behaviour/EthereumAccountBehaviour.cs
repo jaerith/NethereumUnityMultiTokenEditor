@@ -49,6 +49,8 @@ namespace Nethereum.Unity.Behaviours
         private float timePassedInSeconds = 0.0f;
         private int   lastTimeThreshold   = 0;
 
+        public event Action<EthereumBalanceChangeEvent> onBalanceUpdated;
+
         void Start()
         {
             Debug.Log("Debug: EAB (" + _name + ") has started!");
@@ -145,6 +147,18 @@ namespace Nethereum.Unity.Behaviours
                 if ((balanceNum != currBalanceNum) && (_audioSourceTokenUpdated != null))
                 {
                     _audioSourceTokenUpdated.Play();
+
+                    var balanceUpdatedEvent =
+                        new EthereumBalanceChangeEvent()
+                        {
+                            AccountPublicAddress = PublicAddress
+                            , TokenId = UnityERC1155ServiceFactory.ConvertBigIntegerToLong(mintNode.TokenId)
+                            , TokenPreviousBalance = currBalanceNum
+                            , TokenCurrentBalance = balanceNum
+                            , TotalTokenSupply = totalBalanceNum
+                        };
+
+                    onBalanceUpdated(balanceUpdatedEvent);
                 }
 
                 _tokenOwnershipDescriptions.Add("Token (" + mintNode.TokenId + ") -> Balance: [" + balanceNum + "]");
