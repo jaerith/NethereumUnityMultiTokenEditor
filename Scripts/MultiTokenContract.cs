@@ -90,6 +90,8 @@ namespace Nethereum.Unity.MultiToken
 
         public MultiTokenContractNode GetRootNode() { return rootNode; }
 
+        public Web3.Web3 GetWeb3() { return _web3; }
+
         public string ChainUrl { get { return _chainUrl; } }
 
         public string PublicAddress { get { return _account.Address; } }
