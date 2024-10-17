@@ -3,11 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 
 using Nethereum.Contracts.UnityERC1155;
-using Nethereum.Unity.MultiToken;
+using Nethereum.Util;
 using Nethereum.Web3.Accounts;
 
 using UnityEngine;
 using UnityEditor;
+
+using Nethereum.Unity.MultiToken;
 
 namespace Nethereum.Unity.Behaviours
 {
@@ -40,14 +42,21 @@ namespace Nethereum.Unity.Behaviours
         [SerializeField]
         private AudioSource _audioSourceTokenUpdated = null;
 
+        [SerializeField]
+        private AudioSource _audioSourceEtherUpdated = null;
+
         private Dictionary<System.Numerics.BigInteger, long> _tokenIdAmounts = new Dictionary<System.Numerics.BigInteger, long>();
 
         private Dictionary<string, long> _tokenSymbolAmounts = new Dictionary<string, long>();
 
         public MultiTokenContract Contract { get { return _contract; } }
 
-        private float timePassedInSeconds = 0.0f;
-        private int   lastTimeThreshold   = 0;
+        private decimal _currentEtherBalance = 0.0m;
+
+        public decimal CurrentEtherBalance { get { return _currentEtherBalance; } }
+
+        private float _timePassedInSeconds = 0.0f;
+        private int   _lastTimeThreshold   = 0;
 
         public event Action<EthereumBalanceChangeEvent> onBalanceUpdated;
 
@@ -85,12 +94,14 @@ namespace Nethereum.Unity.Behaviours
 
         private void AdjustTimer()
         {
-            timePassedInSeconds += Time.deltaTime;
+            _timePassedInSeconds += Time.deltaTime;
 
-            int timePassed = (int) timePassedInSeconds;
-            if ((timePassed > 1) && (timePassed > lastTimeThreshold) && ((timePassed % _refreshTokenIntervalInSeconds) == 0))
+            int timePassed = (int) _timePassedInSeconds;
+            if ((timePassed > 1) && (timePassed > _lastTimeThreshold) && ((timePassed % _refreshTokenIntervalInSeconds) == 0))
             {
-                lastTimeThreshold = timePassed;
+                _lastTimeThreshold = timePassed;
+
+                RefreshEtherBalance();
 
                 RefreshAllTokenAmounts();
             }
@@ -116,6 +127,26 @@ namespace Nethereum.Unity.Behaviours
                         }
                     }
                 }
+            }
+        }
+
+        public async void RefreshEtherBalance()
+        {
+            if (_contract != null)
+            {
+                var hexBalanceAmount =
+                    await _contract.GetWeb3().Eth.GetBalance.SendRequestAsync(PublicAddress);
+
+                var etherBalance = UnitConversion.Convert.FromWei(hexBalanceAmount.Value);
+
+                Debug.Log("DEBUG: Refreshed Ether balance for account (" + PublicAddress + "): [" + etherBalance + "].");
+
+                if ((_audioSourceEtherUpdated != null) && (etherBalance != _currentEtherBalance))
+                {
+                    _audioSourceEtherUpdated.Play();
+                }
+
+                _currentEtherBalance = etherBalance;
             }
         }
 
