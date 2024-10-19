@@ -18,6 +18,8 @@ namespace Nethereum.Unity.Behaviours
         [SerializeField]
         private string _name;
 
+        public string Name { get { return _name; } }
+
         [SerializeField]
         private string _privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
 
@@ -64,7 +66,8 @@ namespace Nethereum.Unity.Behaviours
         {
             Debug.Log("Debug: EAB (" + _name + ") has started!");
 
-            var account = new Account(_privateKey, _contract.ChainId);
+            var account =
+                new Account(_privateKey, (_contract != null) ? _contract.ChainId : null);
 
             _publicAddress = account.Address;
 
@@ -97,13 +100,16 @@ namespace Nethereum.Unity.Behaviours
             _timePassedInSeconds += Time.deltaTime;
 
             int timePassed = (int) _timePassedInSeconds;
-            if ((timePassed > 1) && (timePassed > _lastTimeThreshold) && ((timePassed % _refreshTokenIntervalInSeconds) == 0))
+            if ((timePassed > 1) && (timePassed > _lastTimeThreshold))
             {
                 _lastTimeThreshold = timePassed;
 
-                RefreshEtherBalance();
+                if ((_lastTimeThreshold % _refreshTokenIntervalInSeconds) == 0)
+                {
+                    RefreshEtherBalance();
 
-                RefreshAllTokenAmounts();
+                    RefreshAllTokenAmounts();
+                }
             }
         }
 
@@ -120,11 +126,9 @@ namespace Nethereum.Unity.Behaviours
                 {
                     if (node.IsDeployed && (node is MultiTokenMintNode))
                     {
-                        var mintNode = (MultiTokenMintNode)node;
-                        if (mintNode.HasTokenOwner(_publicAddress))
-                        {
-                            RefreshTokenAmount(mintNode);
-                        }
+                        var mintNode = (MultiTokenMintNode) node;
+
+                        RefreshTokenAmount(mintNode);
                     }
                 }
             }
@@ -263,6 +267,29 @@ namespace Nethereum.Unity.Behaviours
                 }
 
                 RefreshAllTokenAmounts();
+            }
+        }
+
+        public async void TransferTokens(EthereumAccountBehaviour tokenRecipient, long tokenId, long tokenBalance)
+        {
+            if (_contract != null)
+            {
+                var tokenIdBig      = (System.Numerics.BigInteger) tokenId;
+                var tokenBalanceBig = (System.Numerics.BigInteger) tokenBalance;
+
+                Debug.Log("DEBUG: EthereumAccountBehaviour::TransferTokens() -> Starting to transfer [" + tokenBalanceBig +
+                          "] tokens of Token ID (" + tokenIdBig + ") that are owned by address (" + PublicAddress +
+                          ") to the recipient address (" + tokenRecipient.PublicAddress + ")");
+
+                var erc1155Service = UnityERC1155ServiceFactory.CreateService(_contract, _privateKey);
+
+                var transfer =
+                    await erc1155Service
+                            .SafeTransferFromRequestAndWaitForReceiptAsync(PublicAddress, tokenRecipient.PublicAddress, tokenIdBig, tokenBalanceBig, new byte[] { });
+
+                RefreshAllTokenAmounts();
+
+                tokenRecipient.RefreshAllTokenAmounts();
             }
         }
 
