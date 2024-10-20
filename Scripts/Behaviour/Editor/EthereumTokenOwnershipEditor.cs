@@ -22,6 +22,22 @@ namespace Nethereum.Unity.Behaviours
             EditorGUILayout.LabelField("");
             GUILayout.EndHorizontal();
 
+            if (_tokenOwnership.TokenRecipient != null)
+            {
+                GUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("Name: (" + _tokenOwnership.TokenRecipient.Name + ")");
+                GUILayout.EndHorizontal();
+
+                if (GUILayout.Button("Transfer Token"))
+                {
+                    _tokenOwnership.TransferTokens(_tokenOwnership.TokenRecipient);
+                }
+
+                GUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("");
+                GUILayout.EndHorizontal();
+            }
+
             if (GUILayout.Button("Refund Token"))
             {
                 _tokenOwnership.RefundToken();

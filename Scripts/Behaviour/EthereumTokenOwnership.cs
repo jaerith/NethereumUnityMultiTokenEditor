@@ -16,6 +16,11 @@ namespace Nethereum.Unity.Behaviours
         [SerializeField]
         private long _totalTokenSupply;
 
+        [SerializeField]
+        private EthereumAccountBehaviour _tokenRecipient = null;
+
+        public EthereumAccountBehaviour TokenRecipient { get { return _tokenRecipient; } }
+
         private EthereumAccountBehaviour _accountBehaviour;
 
         public EthereumTokenOwnership() { }
@@ -29,6 +34,11 @@ namespace Nethereum.Unity.Behaviours
             _totalTokenSupply = tokenSupply;
 
             return this;
+        }
+
+        public void TransferTokens(EthereumAccountBehaviour tokenRecipient) 
+        {
+            _accountBehaviour.TransferTokens(tokenRecipient, _tokenId, _tokenBalance);
         }
 
         public void RefundToken()
