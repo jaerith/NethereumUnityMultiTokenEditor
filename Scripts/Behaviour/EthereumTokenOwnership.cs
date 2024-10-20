@@ -39,6 +39,9 @@ namespace Nethereum.Unity.Behaviours
         public void TransferTokens(EthereumAccountBehaviour tokenRecipient) 
         {
             _accountBehaviour.TransferTokens(tokenRecipient, _tokenId, _tokenBalance);
+
+            _tokenBalance   = 0;
+            _tokenRecipient = null;
         }
 
         public void RefundToken()
