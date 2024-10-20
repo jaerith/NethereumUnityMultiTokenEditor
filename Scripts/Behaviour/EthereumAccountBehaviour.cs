@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using Nethereum.Contracts.UnityERC1155;
 using Nethereum.Util;
@@ -10,6 +11,7 @@ using UnityEngine;
 using UnityEditor;
 
 using Nethereum.Unity.MultiToken;
+using Nethereum.RPC.Eth.DTOs;
 
 namespace Nethereum.Unity.Behaviours
 {
@@ -270,8 +272,10 @@ namespace Nethereum.Unity.Behaviours
             }
         }
 
-        public async void TransferTokens(EthereumAccountBehaviour tokenRecipient, long tokenId, long tokenBalance)
+        public async Task<long> TransferTokens(EthereumAccountBehaviour tokenRecipient, long tokenId, long tokenBalance)
         {
+            long tokensTransferred = 0;
+
             if (_contract != null)
             {
                 var tokenIdBig      = (System.Numerics.BigInteger) tokenId;
@@ -287,10 +291,17 @@ namespace Nethereum.Unity.Behaviours
                     await erc1155Service
                             .SafeTransferFromRequestAndWaitForReceiptAsync(PublicAddress, tokenRecipient.PublicAddress, tokenIdBig, tokenBalanceBig, new byte[] { });
 
+                if (transfer.Succeeded())
+                {
+                    tokensTransferred = tokenBalance;
+                }
+
                 RefreshAllTokenAmounts();
 
                 tokenRecipient.RefreshAllTokenAmounts();
             }
+
+            return tokensTransferred;
         }
 
         private void ResetOwnershipProperties()
