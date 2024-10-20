@@ -59,7 +59,10 @@ namespace Nethereum.Unity.MultiToken
         {
             nodeLookup.Clear();
 
-            nodes.ForEach(x => nodeLookup[x.name] = x);
+            if (nodes != null)
+            {
+                nodes.ForEach(x => nodeLookup[x.name] = x);
+            }
 
             if (_account == null)
             {

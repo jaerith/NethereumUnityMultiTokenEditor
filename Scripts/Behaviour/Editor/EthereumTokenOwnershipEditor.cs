@@ -28,7 +28,7 @@ namespace Nethereum.Unity.Behaviours
                 EditorGUILayout.LabelField("Name: (" + _tokenOwnership.TokenRecipient.Name + ")");
                 GUILayout.EndHorizontal();
 
-                if (GUILayout.Button("Transfer Token"))
+                if (GUILayout.Button("Transfer Tokens"))
                 {
                     _tokenOwnership.TransferTokens(_tokenOwnership.TokenRecipient);
                 }
