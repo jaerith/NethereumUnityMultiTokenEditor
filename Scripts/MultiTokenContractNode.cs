@@ -9,11 +9,25 @@ namespace Nethereum.Unity.MultiToken
 {
     public class MultiTokenContractNode : MultiTokenNode
     {
+        public delegate void PauseAction(MultiTokenContractNode contractNode);
+        public static event PauseAction OnPause;
+
+        public delegate void UnpauseAction(MultiTokenContractNode contractNode);
+        public static event UnpauseAction OnUnpause;
+
         [SerializeField]
         private string _contractName;
 
         [SerializeField]
         private string _contractAddress;
+
+        [SerializeField]
+        private bool _paused = false;
+
+        public bool IsPaused 
+        { 
+            get { return _paused; } 
+        }
 
         #region UNITY EDITOR SECTION
 
@@ -79,6 +93,18 @@ namespace Nethereum.Unity.MultiToken
         }
 
 #endif
+
+        public void PauseContract()
+        {
+            OnPause(this);
+            _paused = true;
+        }
+
+        public void UnpauseContract()
+        {
+            OnUnpause(this);
+            _paused = false;
+        }
 
         #endregion
 

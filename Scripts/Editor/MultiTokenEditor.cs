@@ -128,6 +128,10 @@ namespace Nethereum.Unity.MultiToken
 
             MultiTokenMintNode.OnTransfer += TransferToken;
 
+            MultiTokenContractNode.OnPause += PauseContract;
+
+            MultiTokenContractNode.OnUnpause += UnpauseContract;
+
             _nodeContractStyle = new GUIStyle();
             _nodeContractStyle.normal.background = EditorGUIUtility.Load("node0") as Texture2D;
             _nodeContractStyle.normal.textColor  = Color.white;
@@ -745,6 +749,18 @@ namespace Nethereum.Unity.MultiToken
             }
         }
 
+        private async void PauseContract(MultiTokenContractNode contractNode)
+        {
+            if ((_selectedContract != null) && (_selectedContract.name == contractNode.ContractName))
+            {
+                await _selectedContract.MultiTokenService.PausedQueryAsync();
+            }
+            else
+            {
+                Debug.Log("DEBUG: Cannot pause contract since the one specified is not the selected contract.");
+            }
+        }
+
         private async void RefreshMintNode(MultiTokenMintNode mintNode)
         {
             if ((_selectedContract != null) && mintNode.IsDeployed)
@@ -794,6 +810,18 @@ namespace Nethereum.Unity.MultiToken
             else
             {
                 Debug.Log("DEBUG: TransferToken() cannot be invoked properly since the selected contract is NULL.");
+            }
+        }
+
+        private async void UnpauseContract(MultiTokenContractNode contractNode)
+        {
+            if ((_selectedContract != null) && (_selectedContract.name == contractNode.ContractName))
+            {
+                await _selectedContract.MultiTokenService.UnpauseRequestAsync();
+            }
+            else
+            {
+                Debug.Log("DEBUG: Cannot unpause contract since the one specified is not the selected contract.");
             }
         }
     }
