@@ -751,13 +751,13 @@ namespace Nethereum.Unity.MultiToken
 
         private async void PauseContract(MultiTokenContractNode contractNode)
         {
-            if ((_selectedContract != null) && (_selectedContract.name == contractNode.ContractName))
+            if (_selectedContract != null)
             {
-                await _selectedContract.MultiTokenService.PausedQueryAsync();
+                await _selectedContract.MultiTokenService.PauseRequestAsync();
             }
             else
             {
-                Debug.Log("DEBUG: Cannot pause contract since the one specified is not the selected contract.");
+                Debug.Log("DEBUG: Cannot pause contract since there is no selected contract.");
             }
         }
 
@@ -815,13 +815,13 @@ namespace Nethereum.Unity.MultiToken
 
         private async void UnpauseContract(MultiTokenContractNode contractNode)
         {
-            if ((_selectedContract != null) && (_selectedContract.name == contractNode.ContractName))
+            if (_selectedContract != null)
             {
                 await _selectedContract.MultiTokenService.UnpauseRequestAsync();
             }
             else
             {
-                Debug.Log("DEBUG: Cannot unpause contract since the one specified is not the selected contract.");
+                Debug.Log("DEBUG: Cannot unpause contract since there is no selected contract.");
             }
         }
     }
