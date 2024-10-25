@@ -3,12 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Numerics;
 
-using UnityEditor.Experimental.GraphView;
 using UnityEditor;
 using UnityEngine;
 
-using Nethereum.Unity.Editors;
-using Nethereum.Unity.Editors.Utils;
+using Nethereum.Unity.Behaviours;
 
 namespace Nethereum.Unity.MultiToken
 {
@@ -46,6 +44,10 @@ namespace Nethereum.Unity.MultiToken
         // [OnChangedCall("onOwnersChanged")]
         private List<string> _ownerAddresses = new List<string>();
 
+        private EthereumAccountBehaviour _tokenRecipient = null;
+
+        public EthereumAccountBehaviour TokenRecipient { get { return _tokenRecipient; } }
+
         public string TokenSymbol { get { return _tokenSymbol; } }
 
         public string TokenOwnerAddress { get { return _tokenOwnerAddress; } }
@@ -69,9 +71,6 @@ namespace Nethereum.Unity.MultiToken
 
             _totalBalance = newBalance;
         }
-
-
-        #region UNITY EDITOR SECTION
 
         public void AddTokenOwner(string tokenOwnerPublicAddress)
         {
@@ -167,6 +166,10 @@ namespace Nethereum.Unity.MultiToken
 
         }
 
-        #endregion
+        public void TransferTokens(EthereumAccountBehaviour tokenRecipient)
+        {
+            OnTransfer(this, tokenRecipient.PublicAddress);
+        }
+
     }
 }
