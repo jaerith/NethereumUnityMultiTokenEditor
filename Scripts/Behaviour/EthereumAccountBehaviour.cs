@@ -88,6 +88,10 @@ namespace Nethereum.Unity.Behaviours
                         }
                     }
                 }
+
+                RefreshEtherBalance();
+
+                RefreshAllTokenAmounts();
             }
         }
 
@@ -264,6 +268,38 @@ namespace Nethereum.Unity.Behaviours
                             var transfer =
                                 await erc1155Service
                                       .SafeTransferFromRequestAndWaitForReceiptAsync(_publicAddress, mintNode.TokenOwnerAddress, mintNode.TokenId, 1, new byte[] { });
+                        }
+                    }
+                }
+
+                RefreshAllTokenAmounts();
+            }
+        }
+
+        public async void RequestToken(long tokenId)
+        {
+            if (_contract != null)
+            {
+                System.Numerics.BigInteger requestedAmount = 1;
+
+                var tokenIdBig = (System.Numerics.BigInteger) tokenId;
+
+                Debug.Log("DEBUG: EthereumAccountBehaviour::RequestToken() -> Requesting [" + requestedAmount + "] token(s) " + 
+                          "of Token ID (" + tokenIdBig + ") be sent to (" + PublicAddress + ").");
+
+                var erc1155Service = UnityERC1155ServiceFactory.CreateService(_contract, _privateKey);
+
+                foreach (var node in _contract.GetAllNodes())
+                {
+                    if (node.IsDeployed && (node is MultiTokenMintNode))
+                    {
+                        var mintNode = (MultiTokenMintNode)node;
+
+                        if (mintNode.TokenId == tokenIdBig)
+                        {
+                            mintNode.TransferTokens(this);
+
+                            break;
                         }
                     }
                 }
