@@ -13,13 +13,15 @@ namespace Nethereum.Unity.Behaviours
         [SerializeField]
         private long _tokenBalance;
 
+        public long TokenBalance { get { return _tokenBalance; } }
+
         [SerializeField]
         private long _totalTokenSupply;
 
         [SerializeField]
-        private EthereumAccountBehaviour _tokenRecipient = null;
+        private EthereumAccountBehaviour _tokenTransferRecipient = null;
 
-        public EthereumAccountBehaviour TokenRecipient { get { return _tokenRecipient; } }
+        public EthereumAccountBehaviour TokenTransferRecipient { get { return _tokenTransferRecipient; } }
 
         private EthereumAccountBehaviour _accountBehaviour;
 
@@ -41,12 +43,24 @@ namespace Nethereum.Unity.Behaviours
             _accountBehaviour.TransferTokens(tokenRecipient, _tokenId, _tokenBalance);
 
             _tokenBalance   = 0;
-            _tokenRecipient = null;
+
+            _tokenTransferRecipient = null;
+        }
+
+        public void RequestToken()
+        {
+            _accountBehaviour.RequestToken(_tokenId);
+
+            _tokenBalance     += 1;
+            _totalTokenSupply -= 1;
         }
 
         public void RefundToken()
         {
             _accountBehaviour.RefundOwnedTokens(_tokenId, _tokenBalance);
+
+            _totalTokenSupply += _tokenBalance;
+            _tokenBalance     = 0;            
         }
     }
 }

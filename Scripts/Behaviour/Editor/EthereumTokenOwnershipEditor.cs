@@ -22,15 +22,15 @@ namespace Nethereum.Unity.Behaviours
             EditorGUILayout.LabelField("");
             GUILayout.EndHorizontal();
 
-            if (_tokenOwnership.TokenRecipient != null)
+            if (_tokenOwnership.TokenTransferRecipient != null)
             {
                 GUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField("Name: (" + _tokenOwnership.TokenRecipient.Name + ")");
+                EditorGUILayout.LabelField("Name: (" + _tokenOwnership.TokenTransferRecipient.Name + ")");
                 GUILayout.EndHorizontal();
 
                 if (GUILayout.Button("Transfer Tokens"))
                 {
-                    _tokenOwnership.TransferTokens(_tokenOwnership.TokenRecipient);
+                    _tokenOwnership.TransferTokens(_tokenOwnership.TokenTransferRecipient);
                 }
 
                 GUILayout.BeginHorizontal();
@@ -38,9 +38,21 @@ namespace Nethereum.Unity.Behaviours
                 GUILayout.EndHorizontal();
             }
 
-            if (GUILayout.Button("Refund Token"))
+            if (GUILayout.Button("Request Token"))
             {
-                _tokenOwnership.RefundToken();
+                _tokenOwnership.RequestToken();
+            }
+
+            if (_tokenOwnership.TokenBalance > 0)
+            {
+                GUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("");
+                GUILayout.EndHorizontal();
+
+                if (GUILayout.Button("Refund Token"))
+                {
+                    _tokenOwnership.RefundToken();
+                }
             }
         }
     }
