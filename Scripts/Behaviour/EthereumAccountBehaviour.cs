@@ -75,6 +75,8 @@ namespace Nethereum.Unity.Behaviours
         private List<EventLog<UnityErc1155TransferSingleEvent>> _erc1155TransferEventLogs = 
             new List<EventLog<UnityErc1155TransferSingleEvent>>();
 
+        public List<EventLog<UnityErc1155TransferSingleEvent>> LatestTokenTransfers { get { return _erc1155TransferEventLogs; } }
+
         public event Action<EthereumBalanceChangeEvent> onBalanceUpdated;
 
         void Start()
@@ -328,103 +330,109 @@ namespace Nethereum.Unity.Behaviours
 
         public async void RetrieveRecentContractTransactionHistory()
         {
-            List<TransactionReceiptVO> foundTransactions = new List<TransactionReceiptVO>();
-
-            var latestBlockNumber = 
-                await _contract.GetWeb3().Eth.Blocks.GetBlockNumber.SendRequestAsync();
-
-            Debug.Log("DEBUG: Latest block number is: [" + latestBlockNumber.Value + "]");
-            Debug.Log("DEBUG: Checking out transactions sent to contract at address[" + _contract.GetRootNode().ContractAddress + "]");
-
-            //create our processor
-            var processor = 
-                _contract.GetWeb3().Processing.Blocks.CreateBlockProcessor(steps =>
+            if (_contract != null) 
             {
-                //for performance we add criteria before we have the receipt to prevent unecessary data retrieval
-                //we only want to retrieve receipts if the tx was sent to the contract
-                steps
-                .TransactionStep
-                .SetMatchCriteria(t => (t.Transaction.IsFrom(_contract.PublicAddress) && t.Transaction.IsTo(PublicAddress)) ||
-                                       (t.Transaction.IsFrom(PublicAddress) && t.Transaction.IsTo(_contract.PublicAddress)));
-
-                steps.TransactionReceiptStep.AddSynchronousProcessorHandler(tx => foundTransactions.Add(tx));
-            });
-
-            //if we need to stop the processor mid execution - call cancel on the token
-            var cancellationToken = new CancellationToken();
-
-            //crawl the blocks
-            await processor.ExecuteAsync(
-                toBlockNumber: (latestBlockNumber.Value + 25),
-                cancellationToken: cancellationToken,
-                startAtBlockNumberIfNotProcessed: (latestBlockNumber.Value - 25));
-
-            lock (_contractTransactions)
-            {
-                _contractTransactions.AddRange(foundTransactions);
-            }
-
-            Debug.Log($"Transactions. Count: {_contractTransactions.Count}");
-        }
-
-        public async void RetrieveRecentContractTransferHistory()
-        {
-            try
-            {
-                _executingTransferHistoryRetrieval = true;
-
-                var foundTransferLogs = new List<EventLog<UnityErc1155TransferSingleEvent>>();
-
-                var erc1155TransferHandler =
-                    new EventLogProcessorHandler<UnityErc1155TransferSingleEvent>(eventLog => foundTransferLogs.Add(eventLog));
-
-                var processingHandlers = new ProcessorHandler<FilterLog>[] { erc1155TransferHandler };
-
-                var contractFilter = new NewFilterInput
-                {
-                    Address = new[] { _contract.GetRootNode().ContractAddress }
-                };
-
-                var logsProcessor =
-                    _contract.GetWeb3().Processing.Logs.CreateProcessor(
-                          logProcessors: processingHandlers, filter: contractFilter);
-
-                //if we need to stop the processor mid execution - call cancel on the token
-                var cancellationToken = new CancellationToken();
+                List<TransactionReceiptVO> foundTransactions = new List<TransactionReceiptVO>();
 
                 var latestBlockNumber =
                     await _contract.GetWeb3().Eth.Blocks.GetBlockNumber.SendRequestAsync();
 
-                if (lastBlockTransferMilestone == 0)
-                {
-                    lastBlockTransferMilestone = latestBlockNumber.Value - 25;
-                }
-
                 Debug.Log("DEBUG: Latest block number is: [" + latestBlockNumber.Value + "]");
-                Debug.Log("DEBUG: Checking out transfers sent to contract at address[" + _contract.GetRootNode().ContractAddress + "]");
+                Debug.Log("DEBUG: Checking out transactions sent to contract at address[" + _contract.GetRootNode().ContractAddress + "]");
 
-                //crawl the required block range
-                await logsProcessor.ExecuteAsync(
-                    toBlockNumber: latestBlockNumber.Value,
+                //create our processor
+                var processor =
+                    _contract.GetWeb3().Processing.Blocks.CreateBlockProcessor(steps =>
+                    {
+                        //for performance we add criteria before we have the receipt to prevent unecessary data retrieval
+                        //we only want to retrieve receipts if the tx was sent to the contract
+                        steps
+                    .TransactionStep
+                    .SetMatchCriteria(t => (t.Transaction.IsFrom(_contract.PublicAddress) && t.Transaction.IsTo(PublicAddress)) ||
+                                           (t.Transaction.IsFrom(PublicAddress) && t.Transaction.IsTo(_contract.PublicAddress)));
+
+                        steps.TransactionReceiptStep.AddSynchronousProcessorHandler(tx => foundTransactions.Add(tx));
+                    });
+
+                //if we need to stop the processor mid execution - call cancel on the token
+                var cancellationToken = new CancellationToken();
+
+                //crawl the blocks
+                await processor.ExecuteAsync(
+                    toBlockNumber: (latestBlockNumber.Value + 25),
                     cancellationToken: cancellationToken,
-                    startAtBlockNumberIfNotProcessed: lastBlockTransferMilestone);
+                    startAtBlockNumberIfNotProcessed: (latestBlockNumber.Value - 25));
 
-                lock (_erc1155TransferEventLogs)
+                lock (_contractTransactions)
                 {
-                    _erc1155TransferEventLogs.AddRange(foundTransferLogs);
+                    _contractTransactions.AddRange(foundTransactions);
                 }
 
-                Debug.Log($"ERC1155 Logs found: [{_erc1155TransferEventLogs.Count}].");
+                Debug.Log($"Transactions. Count: {_contractTransactions.Count}");
+            }
+        }
 
-                lastBlockTransferMilestone = latestBlockNumber;
-            }
-            catch (Exception ex)
+        public async void RetrieveRecentContractTransferHistory()
+        {
+            if (_contract != null)
             {
-                throw ex;
-            }
-            finally
-            {
-                _executingTransferHistoryRetrieval = false;
+                try
+                {
+                    _executingTransferHistoryRetrieval = true;
+
+                    var foundTransferLogs = new List<EventLog<UnityErc1155TransferSingleEvent>>();
+
+                    var erc1155TransferHandler =
+                        new EventLogProcessorHandler<UnityErc1155TransferSingleEvent>(eventLog => foundTransferLogs.Add(eventLog));
+
+                    var processingHandlers = new ProcessorHandler<FilterLog>[] { erc1155TransferHandler };
+
+                    var contractFilter = new NewFilterInput
+                    {
+                        Address = new[] { _contract.GetRootNode().ContractAddress }
+                    };
+
+                    var logsProcessor =
+                        _contract.GetWeb3().Processing.Logs.CreateProcessor(
+                              logProcessors: processingHandlers, filter: contractFilter);
+
+                    //if we need to stop the processor mid execution - call cancel on the token
+                    var cancellationToken = new CancellationToken();
+
+                    var latestBlockNumber =
+                        await _contract.GetWeb3().Eth.Blocks.GetBlockNumber.SendRequestAsync();
+
+                    if (lastBlockTransferMilestone == 0)
+                    {
+                        lastBlockTransferMilestone = latestBlockNumber.Value - 25;
+                    }
+
+                    Debug.Log("DEBUG: Latest block number is: [" + latestBlockNumber.Value + "]");
+                    Debug.Log("DEBUG: Checking out transfers sent to contract at address[" + _contract.GetRootNode().ContractAddress + "]");
+
+                    //crawl the required block range
+                    await logsProcessor.ExecuteAsync(
+                        toBlockNumber: latestBlockNumber.Value,
+                        cancellationToken: cancellationToken,
+                        startAtBlockNumberIfNotProcessed: lastBlockTransferMilestone);
+
+                    lock (_erc1155TransferEventLogs)
+                    {
+                        _erc1155TransferEventLogs.AddRange(foundTransferLogs);
+                    }
+
+                    Debug.Log($"ERC1155 Logs found: [{_erc1155TransferEventLogs.Count}].");
+
+                    lastBlockTransferMilestone = latestBlockNumber;
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    _executingTransferHistoryRetrieval = false;
+                }                
             }
         }
 
