@@ -44,6 +44,52 @@ namespace Nethereum.Unity.Behaviours
             {
                 _accountBehaviour.RefundAllOwnedTokens();
             }
+
+            var latestTokenTransfers  = _accountBehaviour.LatestTokenTransfers;
+            var latestTransfersUpdate = _accountBehaviour.TokenTransferLogsLastTimeUpdated;
+            var latestTransferCount   = latestTokenTransfers.Count;
+            var displayCount          = _accountBehaviour.DisplayLatestTransfersHistoryCount;
+            if (latestTokenTransfers.Count > 0) 
+            {
+                var mostRecentTransfers =
+                    latestTransferCount > displayCount ?
+                    latestTokenTransfers.GetRange((latestTransferCount - displayCount), displayCount) :
+                    latestTokenTransfers;
+
+                GUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("");
+                GUILayout.EndHorizontal();
+
+                string transactionHistoryLabel =
+                    "Latest [" + displayCount + "] Transfers (" + latestTransfersUpdate + ")";
+
+                GUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField(transactionHistoryLabel);
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("");
+                GUILayout.EndHorizontal();
+
+                mostRecentTransfers.Reverse();
+
+                int trxIndex = latestTransferCount;
+                foreach (var eventLog in mostRecentTransfers)
+                {
+                    var transfer = eventLog.Event;
+
+                    string eventMessage =
+                        "Trx # [" + trxIndex + "] ->" +
+                        ((transfer.To == _accountBehaviour.PublicAddress) ? "Received [" : "Sent [") +
+                        transfer.Value + "] tokens of Token ID (" + transfer.Id + ")";
+
+                    GUILayout.BeginHorizontal();
+                    EditorGUILayout.TextArea(eventMessage);
+                    GUILayout.EndHorizontal();
+
+                    --trxIndex;
+                }
+            }            
         }
 
         private GUIStyle GetGUIStyle(decimal etherBalance)
