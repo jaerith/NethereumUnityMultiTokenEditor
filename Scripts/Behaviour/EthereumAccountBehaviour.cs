@@ -53,20 +53,25 @@ namespace Nethereum.Unity.Behaviours
         [SerializeField]
         private AudioSource _audioSourceEtherUpdated = null;
 
+        [SerializeField]
+        private int _displayLatestTransfersHistoryCount = 3;
+
+        public int DisplayLatestTransfersHistoryCount { get { return _displayLatestTransfersHistoryCount; } }
+
         private Dictionary<System.Numerics.BigInteger, long> _tokenIdAmounts = new Dictionary<System.Numerics.BigInteger, long>();
 
         private Dictionary<string, long> _tokenSymbolAmounts = new Dictionary<string, long>();
 
         public MultiTokenContract Contract { get { return _contract; } }
 
-        private decimal _currentEtherBalance = 0.0m;
-
-        public decimal CurrentEtherBalance { get { return _currentEtherBalance; } }
+        public decimal CurrentEtherBalance { get; protected set; }
 
         private bool _executingTransferHistoryRetrieval = false;
 
         private float _timePassedInSeconds = 0.0f;
         private int   _lastTimeThreshold   = 0;
+
+        public string TokenTransferLogsLastTimeUpdated { get; protected set; }
 
         private System.Numerics.BigInteger lastBlockTransferMilestone = 0;
 
@@ -171,12 +176,12 @@ namespace Nethereum.Unity.Behaviours
 
                 Debug.Log("DEBUG: Refreshed Ether balance for account (" + PublicAddress + "): [" + etherBalance + "].");
 
-                if ((_audioSourceEtherUpdated != null) && (etherBalance != _currentEtherBalance))
+                if ((_audioSourceEtherUpdated != null) && (etherBalance != CurrentEtherBalance))
                 {
                     _audioSourceEtherUpdated.Play();
                 }
 
-                _currentEtherBalance = etherBalance;
+                CurrentEtherBalance = etherBalance;
             }
         }
 
@@ -424,6 +429,8 @@ namespace Nethereum.Unity.Behaviours
                     Debug.Log($"ERC1155 Logs found: [{_erc1155TransferEventLogs.Count}].");
 
                     lastBlockTransferMilestone = latestBlockNumber;
+
+                    TokenTransferLogsLastTimeUpdated = DateTime.Now.ToString("MM/dd/yy H:mm:ss");
                 }
                 catch (Exception ex)
                 {
