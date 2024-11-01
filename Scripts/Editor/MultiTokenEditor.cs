@@ -625,7 +625,7 @@ namespace Nethereum.Unity.MultiToken
                                 {
                                     var mintNode = (MultiTokenMintNode)childNode;
 
-                                    mintNode.SetTokenName("Token " + tokenId);
+                                    mintNode.SetTokenName("Token" + tokenId);
                                     mintNode.SetTokenId(UnityERC1155ServiceFactory.ConvertBigIntegerToLong(tokenIdBatch[index]));
                                     mintNode.SetTokenBalance(UnityERC1155ServiceFactory.ConvertBigIntegerToLong(tokenBalances[index]));
                                     mintNode.SetIsDeployed(true);
@@ -742,6 +742,11 @@ namespace Nethereum.Unity.MultiToken
 
                 long balanceNum = UnityERC1155ServiceFactory.ConvertBigIntegerToLong(balance);
                 mintNode.SetTokenBalance(balanceNum);
+
+                if (String.IsNullOrEmpty(mintNode.TokenName))
+                {
+                    mintNode.TokenName = "Token" + mintNode.TokenId;
+                }
             }
             else
             {

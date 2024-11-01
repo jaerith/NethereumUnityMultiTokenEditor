@@ -25,9 +25,6 @@ namespace Nethereum.Unity.MultiToken
         private string _tokenName;
 
         [SerializeField]
-        private string _tokenSymbol;
-
-        [SerializeField]
         private string _tokenOwnerAddress;
 
         [SerializeField]
@@ -47,8 +44,6 @@ namespace Nethereum.Unity.MultiToken
         private EthereumAccountBehaviour _tokenRecipient = null;
 
         public EthereumAccountBehaviour TokenRecipient { get { return _tokenRecipient; } }
-
-        public string TokenSymbol { get { return _tokenSymbol; } }
 
         public string TokenOwnerAddress { get { return _tokenOwnerAddress; } }
 
@@ -94,7 +89,7 @@ namespace Nethereum.Unity.MultiToken
 
                     if (!String.IsNullOrEmpty(newOwner.Trim()))
                     {
-                        Debug.Log("DEBUG: OnTransfer() -> Transfer of (" + _tokenSymbol + ") token to new address (" + newOwner + ").");
+                        Debug.Log("DEBUG: OnTransfer() -> Transfer of Token ID (" + _tokenId + ") to new address (" + newOwner + ").");
                         OnTransfer(this, newOwner);
                     }
                 }
