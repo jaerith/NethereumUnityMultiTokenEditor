@@ -58,9 +58,11 @@ namespace Nethereum.Unity.Behaviours
 
         public int DisplayLatestTransfersHistoryCount { get { return _displayLatestTransfersHistoryCount; } }
 
-        private Dictionary<System.Numerics.BigInteger, long> _tokenIdAmounts = new Dictionary<System.Numerics.BigInteger, long>();
+        private Dictionary<System.Numerics.BigInteger, long> _tokenIdAmounts = 
+            new Dictionary<System.Numerics.BigInteger, long>();
 
-        private Dictionary<string, long> _tokenSymbolAmounts = new Dictionary<string, long>();
+        private Dictionary<System.Numerics.BigInteger, string> _tokenNames = 
+            new Dictionary<System.Numerics.BigInteger, string>();
 
         public MultiTokenContract Contract { get { return _contract; } }
 
@@ -142,6 +144,11 @@ namespace Nethereum.Unity.Behaviours
                     }
                 }
             }
+        }
+
+        public string GetTokenName(System.Numerics.BigInteger tokenId)
+        {
+            return _tokenNames[tokenId];
         }
 
         public void RefreshAllTokenAmounts()
@@ -233,7 +240,7 @@ namespace Nethereum.Unity.Behaviours
 
                 _tokenIdAmounts[mintNode.TokenId] = balanceNum;
 
-                _tokenSymbolAmounts[mintNode.TokenSymbol] = balanceNum;
+                _tokenNames[mintNode.TokenId] = mintNode.TokenName;
             }
             else
             {

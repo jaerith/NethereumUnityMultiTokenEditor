@@ -81,7 +81,8 @@ namespace Nethereum.Unity.Behaviours
                     string eventMessage =
                         "Trx # [" + trxIndex + "] ->" +
                         ((transfer.To == _accountBehaviour.PublicAddress) ? "Received [" : "Sent [") +
-                        transfer.Value + "] tokens of Token ID (" + transfer.Id + ")";
+                        transfer.Value + "] tokens of Token (" +
+                        _accountBehaviour.GetTokenName(transfer.Id) + ") [" + transfer.Id + "]";
 
                     GUILayout.BeginHorizontal();
                     EditorGUILayout.TextArea(eventMessage);
