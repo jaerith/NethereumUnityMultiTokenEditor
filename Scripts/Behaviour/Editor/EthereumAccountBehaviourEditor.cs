@@ -1,10 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-
-using Nethereum.Unity.MultiToken;
-using static Cinemachine.CinemachineBlendDefinition;
-using UnityEngine.UIElements;
 
 namespace Nethereum.Unity.Behaviours
 {
@@ -12,6 +9,10 @@ namespace Nethereum.Unity.Behaviours
     [CanEditMultipleObjects]
     public class EthereumAccountBehaviourEditor : Editor
     {
+        int _lastRecordedTransferCount = 0;
+
+        List<string> _recentTransferDescriptions = new List<string>();
+
         EthereumAccountBehaviour _accountBehaviour;
 
         void OnEnable()
@@ -73,22 +74,34 @@ namespace Nethereum.Unity.Behaviours
 
                 mostRecentTransfers.Reverse();
 
-                int trxIndex = latestTransferCount;
-                foreach (var eventLog in mostRecentTransfers)
+                if (_lastRecordedTransferCount != latestTransferCount)
                 {
-                    var transfer = eventLog.Event;
+                    _recentTransferDescriptions.Clear();
 
-                    string eventMessage =
-                        "Trx # [" + trxIndex + "] ->" +
-                        ((transfer.To == _accountBehaviour.PublicAddress) ? "Received [" : "Sent [") +
-                        transfer.Value + "] tokens of Token (" +
-                        _accountBehaviour.GetTokenName(transfer.Id) + ") [" + transfer.Id + "]";
+                    int trxIndex = latestTransferCount;
+                    foreach (var eventLog in mostRecentTransfers)
+                    {
+                        var transfer = eventLog.Event;
 
+                        string eventMessage =
+                            "Trx # [" + trxIndex + "] ->" +
+                            ((transfer.To == _accountBehaviour.PublicAddress) ? "Received [" : "Sent [") +
+                            transfer.Value + "] tokens of Token (" +
+                            _accountBehaviour.GetTokenName(transfer.Id) + ") [" + transfer.Id + "]";
+
+                        _recentTransferDescriptions.Add(eventMessage);
+
+                        --trxIndex;
+                    }
+
+                    _lastRecordedTransferCount = latestTransferCount;
+                }
+
+                foreach (var transferDescription in _recentTransferDescriptions)
+                {
                     GUILayout.BeginHorizontal();
-                    EditorGUILayout.TextArea(eventMessage);
+                    EditorGUILayout.TextArea(transferDescription);
                     GUILayout.EndHorizontal();
-
-                    --trxIndex;
                 }
             }            
         }
