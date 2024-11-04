@@ -596,10 +596,24 @@ namespace Nethereum.Unity.MultiToken
                     var tokenIdBatch      = new List<System.Numerics.BigInteger>();
                     var tokenIdBalanceMap = new Dictionary<System.Numerics.BigInteger, System.Numerics.BigInteger>();
 
-                    for (System.Numerics.BigInteger tmpTokenId = _tokenIdRangeMinimum; tmpTokenId <= _tokenIdRangeMaximum; tmpTokenId++) 
+                    if ((contractNode.TargetTokenIdsOnConnection != null) && (contractNode.TargetTokenIdsOnConnection.Length > 0))
                     {
-                        tokenOwnerBatch.Add(_selectedContract.PublicAddress);
-                        tokenIdBatch.Add(tmpTokenId);
+                        foreach (var tmpTokenId in contractNode.TargetTokenIdsOnConnection)
+                        {
+                            if (tmpTokenId > 0)
+                            {
+                                tokenOwnerBatch.Add(_selectedContract.PublicAddress);
+                                tokenIdBatch.Add(tmpTokenId);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (System.Numerics.BigInteger tmpTokenId = _tokenIdRangeMinimum; tmpTokenId <= _tokenIdRangeMaximum; tmpTokenId++)
+                        {
+                            tokenOwnerBatch.Add(_selectedContract.PublicAddress);
+                            tokenIdBatch.Add(tmpTokenId);
+                        }
                     }
 
                     var tokenBalances = 

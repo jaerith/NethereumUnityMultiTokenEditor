@@ -24,6 +24,11 @@ namespace Nethereum.Unity.MultiToken
         [SerializeField]
         private bool _paused = false;
 
+        [SerializeField]
+        private long[] _targetTokenIdsOnConnection = new long[0];
+
+        public long[] TargetTokenIdsOnConnection { get { return _targetTokenIdsOnConnection; } }
+
         public bool IsPaused 
         { 
             get { return _paused; } 
