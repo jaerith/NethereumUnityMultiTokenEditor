@@ -161,7 +161,7 @@ namespace Nethereum.Unity.MultiToken
 
         }
 
-        public void TransferTokens(EthereumAccountBehaviour tokenRecipient)
+        public void TransferToken(EthereumAccountBehaviour tokenRecipient)
         {
             OnTransfer(this, tokenRecipient.PublicAddress);
         }

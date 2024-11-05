@@ -319,8 +319,6 @@ namespace Nethereum.Unity.Behaviours
                 Debug.Log("DEBUG: EthereumAccountBehaviour::RequestToken() -> Requesting [" + requestedAmount + "] token(s) " + 
                           "of Token ID (" + tokenIdBig + ") be sent to (" + PublicAddress + ").");
 
-                var erc1155Service = UnityERC1155ServiceFactory.CreateService(_contract, _privateKey);
-
                 foreach (var node in _contract.GetAllNodes())
                 {
                     if (node.IsDeployed && (node is MultiTokenMintNode))
@@ -329,7 +327,7 @@ namespace Nethereum.Unity.Behaviours
 
                         if (mintNode.TokenId == tokenIdBig)
                         {
-                            mintNode.TransferTokens(this);
+                            mintNode.TransferToken(this);
 
                             break;
                         }
