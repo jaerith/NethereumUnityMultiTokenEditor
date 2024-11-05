@@ -18,22 +18,25 @@ namespace Nethereum.Unity.MultiToken
         {
             base.OnInspectorGUI();
 
-            GUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("");
-            GUILayout.EndHorizontal();
+            if (_contractNode.IsDeployed)
+            {
+                GUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("");
+                GUILayout.EndHorizontal();
 
-            if (!_contractNode.IsPaused) 
-            {
-                if (GUILayout.Button("Pause Contract"))
+                if (!_contractNode.IsPaused)
                 {
-                    _contractNode.PauseContract();
+                    if (GUILayout.Button("Pause Contract"))
+                    {
+                        _contractNode.PauseContract();
+                    }
                 }
-            }
-            else
-            {
-                if (GUILayout.Button("Unpause Contract"))
+                else
                 {
-                    _contractNode.UnpauseContract();
+                    if (GUILayout.Button("Unpause Contract"))
+                    {
+                        _contractNode.UnpauseContract();
+                    }
                 }
             }
         }
