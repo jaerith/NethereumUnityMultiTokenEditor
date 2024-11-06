@@ -1,6 +1,6 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,7 +11,6 @@ using Nethereum.Util;
 using Nethereum.Web3.Accounts;
 
 using UnityEngine;
-using UnityEditor;
 
 using Nethereum.Unity.MultiToken;
 using Nethereum.Contracts;
@@ -390,10 +389,10 @@ namespace Nethereum.Unity.Behaviours
                 {
                     _executingTransferHistoryRetrieval = true;
 
-                    var foundTransferLogs = new List<EventLog<UnityErc1155TransferSingleEvent>>();
+                    var foundContractTransferLogs = new List<EventLog<UnityErc1155TransferSingleEvent>>();
 
                     var erc1155TransferHandler =
-                        new EventLogProcessorHandler<UnityErc1155TransferSingleEvent>(eventLog => foundTransferLogs.Add(eventLog));
+                        new EventLogProcessorHandler<UnityErc1155TransferSingleEvent>(eventLog => foundContractTransferLogs.Add(eventLog));
 
                     var processingHandlers = new ProcessorHandler<FilterLog>[] { erc1155TransferHandler };
 
@@ -428,7 +427,10 @@ namespace Nethereum.Unity.Behaviours
 
                     lock (_erc1155TransferEventLogs)
                     {
-                        _erc1155TransferEventLogs.AddRange(foundTransferLogs);
+                        var relevantTransferLogs =
+                            foundContractTransferLogs.Where(tl => (tl.Event.From == PublicAddress) || ((tl.Event.To == PublicAddress)));
+
+                        _erc1155TransferEventLogs.AddRange(relevantTransferLogs);
                     }
 
                     Debug.Log($"ERC1155 Logs found: [{_erc1155TransferEventLogs.Count}].");
