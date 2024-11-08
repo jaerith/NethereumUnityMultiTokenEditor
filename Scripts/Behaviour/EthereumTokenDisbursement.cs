@@ -8,6 +8,9 @@ namespace Nethereum.Unity.Behaviours
 {
     public class EthereumTokenDisbursement : MonoBehaviour
     {
+        public delegate void DisburseAction(EthereumTokenDisbursement tokenDisbursement);
+        public static event DisburseAction OnDisburse;
+
         [SerializeField]
         private string _name;
 
@@ -92,6 +95,8 @@ namespace Nethereum.Unity.Behaviours
                 {
                     _audioSourceTokensDispersed.Play();
                 }
+
+                OnDisburse(this);
             }
         }
 
