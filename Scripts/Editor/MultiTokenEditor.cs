@@ -667,6 +667,11 @@ namespace Nethereum.Unity.MultiToken
                                             {
                                                 mintNode.SetTokenImageUri(tokenMetadata.image);
                                             }
+
+                                            if (!String.IsNullOrEmpty(tokenMetadata.metadataJson))
+                                            {
+                                                mintNode.SetMetadataJson(tokenMetadata.metadataJson);
+                                            }
                                         }
 
                                     }

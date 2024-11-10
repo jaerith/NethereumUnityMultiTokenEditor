@@ -43,6 +43,12 @@ namespace Nethereum.Unity.MultiToken
 
         [HideInInspector]
         [SerializeField]
+        private string _metadataJson;
+
+        public string MetadataJson { get { return _metadataJson; } }
+
+        [HideInInspector]
+        [SerializeField]
         private long _initialTotalBalance = 0;
 
         [SerializeField]
@@ -146,6 +152,11 @@ namespace Nethereum.Unity.MultiToken
             _tokenImageUri = tokenImageUri;
         }
 
+        public void SetMetadataJson(string propertiesJson) 
+        { 
+            _metadataJson = propertiesJson;
+        }
+
         public void SetDeployedStatus(bool isDeployed)
         {
             _isDeployed = isDeployed;
@@ -154,7 +165,6 @@ namespace Nethereum.Unity.MultiToken
         public BigInteger TokenId
         {
             get { return (BigInteger) _tokenId; }
-
         }
 
         public string TokenName

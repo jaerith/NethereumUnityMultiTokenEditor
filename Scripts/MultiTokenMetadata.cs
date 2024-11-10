@@ -11,6 +11,8 @@ namespace Nethereum.Unity.MultiToken
     {
         public string metadataUri = string.Empty;
 
+        public string metadataJson = string.Empty;
+
         public string name;
 
         public string description;
@@ -37,6 +39,8 @@ namespace Nethereum.Unity.MultiToken
                 jsonMetadata = JsonUtility.FromJson<MultiTokenMetadata>(jsonMetadataPayload);
 
                 jsonMetadata.metadataUri = tokenMetadataUri;
+
+                jsonMetadata.metadataJson = jsonMetadataPayload;
             }
             catch (Exception ex)
             {
