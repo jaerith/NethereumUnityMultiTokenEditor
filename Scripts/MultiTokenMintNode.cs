@@ -31,6 +31,14 @@ namespace Nethereum.Unity.MultiToken
         private string _tokenMetadataUrl;
 
         [SerializeField]
+        private string _tokenDescription;
+
+        [SerializeField]
+        private string _tokenImageUri;
+
+        public string TokenImageUri { get { return _tokenImageUri; } }
+
+        [SerializeField]
         private long _totalBalance;
 
         [HideInInspector]
@@ -126,6 +134,16 @@ namespace Nethereum.Unity.MultiToken
         public void SetTokenUrl(string tokenUrl)
         {
             _tokenMetadataUrl = tokenUrl;
+        }
+
+        public void SetTokenDescription(string tokenDescription)
+        {
+            _tokenDescription = tokenDescription;
+        }
+
+        public void SetTokenImageUri(string tokenImageUri)
+        {
+            _tokenImageUri = tokenImageUri;
         }
 
         public void SetDeployedStatus(bool isDeployed)

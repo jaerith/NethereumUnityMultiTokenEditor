@@ -647,6 +647,29 @@ namespace Nethereum.Unity.MultiToken
 
                                     var mintNodeUri = await _selectedContract.MultiTokenService.UriQueryAsync(tokenId);
                                     mintNode.SetTokenUrl(mintNodeUri);
+
+                                    if (!String.IsNullOrEmpty(mintNodeUri))
+                                    {
+                                        var tokenMetadata = MultiTokenMetadata.RetrieveTokenMetadata(mintNodeUri);
+                                        if (tokenMetadata.metadataUri == mintNodeUri)
+                                        {
+                                            if (!String.IsNullOrEmpty(tokenMetadata.name))
+                                            {
+                                                mintNode.SetTokenName(tokenMetadata.name);
+                                            }
+
+                                            if (!String.IsNullOrEmpty(tokenMetadata.description))
+                                            {
+                                                mintNode.SetTokenDescription(tokenMetadata.description);
+                                            }
+
+                                            if (!String.IsNullOrEmpty(tokenMetadata.image))
+                                            {
+                                                mintNode.SetTokenImageUri(tokenMetadata.image);
+                                            }
+                                        }
+
+                                    }
                                 }
                             }
                         }
