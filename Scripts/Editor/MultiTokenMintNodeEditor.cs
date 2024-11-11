@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEditor;
 using UnityEngine.Networking;
 using Unity.EditorCoroutines.Editor;
+using UnityEngine.UIElements;
 
 namespace Nethereum.Unity.MultiToken
 {
@@ -15,6 +16,8 @@ namespace Nethereum.Unity.MultiToken
         MultiTokenMintNode _mintNode = null;
 
         Texture _tokenImage = null;
+
+        Vector2 _scrollPosition = Vector2.zero;
 
         void OnEnable()
         {
@@ -35,10 +38,29 @@ namespace Nethereum.Unity.MultiToken
 
             if (_mintNode.IsDeployed)
             {
+                if (!String.IsNullOrEmpty(_mintNode.MetadataJson))
+                {
+                    GUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField("");
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField("Metadata Json");
+                    GUILayout.EndHorizontal();
+
+                    _scrollPosition = GUILayout.BeginScrollView(_scrollPosition, false, true, GUILayout.MaxHeight(200));
+                    EditorGUILayout.TextArea(_mintNode.MetadataJson);
+                    GUILayout.EndScrollView();
+                }
+
                 if (!String.IsNullOrEmpty(_mintNode.TokenImageUri))
                 {
                     GUILayout.BeginHorizontal();
                     EditorGUILayout.LabelField("");
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField("Token Image");
                     GUILayout.EndHorizontal();
 
                     if (_tokenImage != null)
