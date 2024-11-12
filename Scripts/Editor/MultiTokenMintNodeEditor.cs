@@ -17,7 +17,9 @@ namespace Nethereum.Unity.MultiToken
 
         Texture _tokenImage = null;
 
-        Vector2 _scrollPosition = Vector2.zero;
+        Vector2 _textScrollPosition = Vector2.zero;
+
+        Vector2 _imageScrollPosition = Vector2.zero;
 
         void OnEnable()
         {
@@ -48,7 +50,8 @@ namespace Nethereum.Unity.MultiToken
                     EditorGUILayout.LabelField("Metadata Json");
                     GUILayout.EndHorizontal();
 
-                    _scrollPosition = GUILayout.BeginScrollView(_scrollPosition, false, true, GUILayout.MaxHeight(200));
+                    _textScrollPosition = 
+                        GUILayout.BeginScrollView(_textScrollPosition, false, true, GUILayout.MaxHeight(200));
                     EditorGUILayout.TextArea(_mintNode.MetadataJson);
                     GUILayout.EndScrollView();
                 }
@@ -65,7 +68,10 @@ namespace Nethereum.Unity.MultiToken
 
                     if (_tokenImage != null)
                     {
+                        _imageScrollPosition = 
+                            GUILayout.BeginScrollView(_imageScrollPosition, false, true);
                         GUILayout.Box(_tokenImage);
+                        GUILayout.EndScrollView();
                     }
                 }
             }
