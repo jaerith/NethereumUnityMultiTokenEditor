@@ -139,7 +139,8 @@ namespace Nethereum.Unity.MultiToken
             }
             else
             {
-                rootNode = (MultiTokenContractNode) nodes[0];
+                rootNode =
+                    ((nodes[0] != null) && (nodes[0] is MultiTokenContractNode)) ? (MultiTokenContractNode)nodes[0] : null;
             }
 
             if (!String.IsNullOrEmpty(AssetDatabase.GetAssetPath(this)))
