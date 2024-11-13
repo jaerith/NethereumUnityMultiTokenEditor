@@ -20,6 +20,9 @@ namespace Nethereum.Unity.Behaviours
 {
     public class EthereumAccountBehaviour : MonoBehaviour
     {
+        public delegate void AnnounceAction(EthereumAccountBehaviour accountBehaviour);
+        public static event AnnounceAction OnAnnounce;
+
         [SerializeField]
         private string _name;
 
@@ -68,6 +71,8 @@ namespace Nethereum.Unity.Behaviours
         public decimal CurrentEtherBalance { get; protected set; }
 
         private bool _executingTransferHistoryRetrieval = false;
+
+        private bool _alreadyAnnounced = false;
 
         private float _timePassedInSeconds = 0.0f;
         private int   _lastTimeThreshold   = 0;
@@ -130,6 +135,14 @@ namespace Nethereum.Unity.Behaviours
             if ((timePassed > 1) && (timePassed > _lastTimeThreshold))
             {
                 _lastTimeThreshold = timePassed;
+
+                if (!_alreadyAnnounced && (OnAnnounce != null))
+                {
+                    Debug.Log("Invocation List stands at count[" + OnAnnounce.GetInvocationList().Length + "]");
+
+                    OnAnnounce(this);
+                    _alreadyAnnounced = true;
+                }
 
                 if ((_lastTimeThreshold % _refreshTokenIntervalInSeconds) == 0)
                 {
@@ -280,7 +293,7 @@ namespace Nethereum.Unity.Behaviours
             }
         }
 
-        public async void RefundAllOwnedTokens()
+        public async void RefundOneTokenOfEachType()
         {
             if (_contract != null)
             {

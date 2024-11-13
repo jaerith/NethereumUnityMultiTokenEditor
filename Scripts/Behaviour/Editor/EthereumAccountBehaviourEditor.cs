@@ -41,9 +41,14 @@ namespace Nethereum.Unity.Behaviours
             EditorGUILayout.LabelField("");
             GUILayout.EndHorizontal();
 
-            if (GUILayout.Button("Refund All Tokens"))
+            if (GUILayout.Button("Refund a Token of Each Type"))
             {
-                _accountBehaviour.RefundAllOwnedTokens();
+                if (EditorUtility.DisplayDialog("Refund 1 token from each collection?",
+                                                "Are you sure you want to refund 1 token from each collected pool?", 
+                                                "Refund Them", "Keep Them"))
+                {
+                    _accountBehaviour.RefundOneTokenOfEachType();
+                }
             }
 
             var latestTokenTransfers  = _accountBehaviour.LatestTokenTransfers;
