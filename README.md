@@ -51,7 +51,7 @@ In the Editor window, the user can either deploy an ERC-1155 contract or connect
 
 If the user connects to an existing contract instead of deploying a new one, the editor will attempt to find any tokens within the contract, using the default range 1-10.  However, if the user adds any IDs to the "Target Token Ids on Connection" list, then mint nodes for those specified tokens will be created on connection.  Either by default range or specified token IDs, all relevant metadata will be pulled and parsed via the token URI (if one has been provided for the token).
 
-![Deployed Contract](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Screenshots/MultiTokenEditor_TokenNode_AfterContractConnection.png)
+![Connected Contract](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Screenshots/MultiTokenEditor_TokenNode_AfterContractConnection.png)
 
 </br>
 
