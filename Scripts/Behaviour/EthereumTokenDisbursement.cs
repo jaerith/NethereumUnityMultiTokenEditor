@@ -27,6 +27,9 @@ namespace Nethereum.Unity.Behaviours
         private AudioSource _audioSourceTokensDispersed = null;
 
         [SerializeField]
+        private bool _autofillAccounts = false;
+
+        [SerializeField]
         private List<EthereumAccountBehaviour> _targetAccounts = new List<EthereumAccountBehaviour>();
 
         [SerializeField]
@@ -38,12 +41,22 @@ namespace Nethereum.Unity.Behaviours
         void Start()
         {
             Debug.Log("Debug: ETD (" + _name + ") has started!");
+
+            if (_autofillAccounts)
+            {
+                EthereumAccountBehaviour.OnAnnounce += AddTargetAccount;
+            }
         }
 
         // Update is called once per frame
         void Update()
         {
             AdjustTimer();
+        }
+
+        public void AddTargetAccount(EthereumAccountBehaviour accountBehaviour)
+        {
+            _targetAccounts.Add(accountBehaviour);
         }
 
         private void AdjustTimer()
@@ -96,7 +109,10 @@ namespace Nethereum.Unity.Behaviours
                     _audioSourceTokensDispersed.Play();
                 }
 
-                OnDisburse(this);
+                if (OnDisburse != null)
+                {
+                    OnDisburse(this);
+                }                
             }
         }
 
