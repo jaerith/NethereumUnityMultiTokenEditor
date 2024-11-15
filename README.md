@@ -94,3 +94,11 @@ If the developer only wants to return one type of token to the pool, they can do
 <br/>
 
 ![Ethereum Token Ownership Attached](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Screenshots/EOT_Properties_Gameplay_Update.png)
+
+## Using Ethereum Token Disbursement
+
+In some cases, the developer might wish to distribute tokens to a number of game objects with an attached Ethereum Account Behaviour, before or at the start of running/debugging the game.  Even though there are options to distribute tokens (via the Editor window, via the Ethereum Account Behaviour inspector, etc.), it's not convenient when you want to distribute a Token ID to a number of accounts in one batch.  In order to streamline the process, the [EthereumTokenDisbursement](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Scripts/Behaviour/EthereumTokenDisbursement.cs) class can allow the developer to organize the distribution of tokens in one place.  In addition, the class has an AutofillAccounts option, which will do the work of assembling all known accounts (i.e., Ethereum Account Behaviour instances) within the game and saving the developer the effort of manually adding them.  When the Token Ids and the target accounts have been finalized, the Disburse button will send 1 token of each ID to the target accounts.
+
+<br/>
+
+![Ethereum Token Disbursement](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Screenshots/ETD_Properties_Gameplay_Update.png)
