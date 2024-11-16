@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 using Nethereum.Unity.MultiToken;
@@ -30,10 +31,10 @@ namespace Nethereum.Unity.Behaviours
         private bool _autofillAccounts = false;
 
         [SerializeField]
-        private List<EthereumAccountBehaviour> _targetAccounts = new List<EthereumAccountBehaviour>();
+        private HashSet<EthereumAccountBehaviour> _targetAccounts = new HashSet<EthereumAccountBehaviour>();
 
         [SerializeField]
-        private List<long> _disbursedTokens = new List<long>();
+        private HashSet<long> _disbursedTokens = new HashSet<long>();
 
         private float _timePassedInSeconds = 0.0f;
         private int   _lastTimeThreshold   = 0;
@@ -94,7 +95,7 @@ namespace Nethereum.Unity.Behaviours
 
                             if (mintNode.TokenId == tokenIdBig)
                             {
-                                _targetAccounts.ForEach(t => mintNode.TransferToken(t));
+                                _targetAccounts.ToList().ForEach(t => mintNode.TransferToken(t));
 
                                 tokensDispersed = true;
 
