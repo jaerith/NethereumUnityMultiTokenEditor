@@ -297,7 +297,7 @@ namespace Nethereum.Unity.Behaviours
         {
             if (_contract != null)
             {
-                Debug.Log("DEBUG: EthereumAccountBehaviour::RefundAllOwnedTokens() -> Refunding all tokens owned by address (" +
+                Debug.Log("DEBUG: EthereumAccountBehaviour::RefundAllOwnedTokens() -> Refunding 1 token (of each type) owned by address (" +
                           PublicAddress + ").");
 
                 var erc1155Service = UnityERC1155ServiceFactory.CreateService(_contract, _privateKey);
@@ -307,11 +307,44 @@ namespace Nethereum.Unity.Behaviours
                     if (node.IsDeployed && (node is MultiTokenMintNode))
                     {
                         var mintNode = (MultiTokenMintNode)node;
-                        if (mintNode.HasTokenOwner(_publicAddress))
+
+                        var currTokensHeld = _tokenIdAmounts[mintNode.TokenId];
+
+                        if (mintNode.HasTokenOwner(_publicAddress) || (currTokensHeld > 0))
                         {
                             var transfer =
                                 await erc1155Service
                                       .SafeTransferFromRequestAndWaitForReceiptAsync(_publicAddress, mintNode.TokenOwnerAddress, mintNode.TokenId, 1, new byte[] { });
+                        }
+                    }
+                }
+
+                RefreshAllTokenAmounts();
+            }
+        }
+
+        public async void RefundAllTokens()
+        {
+            if (_contract != null)
+            {
+                Debug.Log("DEBUG: EthereumAccountBehaviour::RefundAllTokens() -> Refunding all tokens owned by address (" +
+                          PublicAddress + ").");
+
+                var erc1155Service = UnityERC1155ServiceFactory.CreateService(_contract, _privateKey);
+
+                foreach (var node in _contract.GetAllNodes())
+                {
+                    if (node.IsDeployed && (node is MultiTokenMintNode))
+                    {
+                        var mintNode = (MultiTokenMintNode)node;
+
+                        var currTokensHeld = _tokenIdAmounts[mintNode.TokenId];
+
+                        if (mintNode.HasTokenOwner(_publicAddress) || (currTokensHeld > 0))
+                        {
+                            var transfer =
+                                await erc1155Service
+                                      .SafeTransferFromRequestAndWaitForReceiptAsync(_publicAddress, mintNode.TokenOwnerAddress, mintNode.TokenId, currTokensHeld, new byte[] { });
                         }
                     }
                 }
