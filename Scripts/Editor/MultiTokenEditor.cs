@@ -648,33 +648,7 @@ namespace Nethereum.Unity.MultiToken
                                     var mintNodeUri = await _selectedContract.MultiTokenService.UriQueryAsync(tokenId);
                                     mintNode.SetTokenUrl(mintNodeUri);
 
-                                    if (!String.IsNullOrEmpty(mintNodeUri))
-                                    {
-                                        var tokenMetadata = MultiTokenMetadata.RetrieveTokenMetadata(mintNodeUri);
-                                        if (tokenMetadata.metadataUri == mintNodeUri)
-                                        {
-                                            if (!String.IsNullOrEmpty(tokenMetadata.name))
-                                            {
-                                                mintNode.SetTokenName(tokenMetadata.name);
-                                            }
-
-                                            if (!String.IsNullOrEmpty(tokenMetadata.description))
-                                            {
-                                                mintNode.SetTokenDescription(tokenMetadata.description);
-                                            }
-
-                                            if (!String.IsNullOrEmpty(tokenMetadata.image))
-                                            {
-                                                mintNode.SetTokenImageUri(tokenMetadata.image);
-                                            }
-
-                                            if (!String.IsNullOrEmpty(tokenMetadata.metadataJson))
-                                            {
-                                                mintNode.SetMetadataJson(tokenMetadata.metadataJson);
-                                            }
-                                        }
-
-                                    }
+                                    PopulateMetadataProperties(mintNode);
                                 }
                             }
                         }
@@ -789,6 +763,8 @@ namespace Nethereum.Unity.MultiToken
                 {
                     mintNode.TokenName = "Token" + mintNode.TokenId;
                 }
+
+                PopulateMetadataProperties(mintNode);
             }
             else
             {
@@ -805,6 +781,36 @@ namespace Nethereum.Unity.MultiToken
             else
             {
                 Debug.Log("DEBUG: Cannot pause contract since there is no selected contract.");
+            }
+        }
+
+        private void PopulateMetadataProperties(MultiTokenMintNode mintNode)
+        {
+            if (!String.IsNullOrEmpty(mintNode.TokenMetadataUrl))
+            {
+                var tokenMetadata = MultiTokenMetadata.RetrieveTokenMetadata(mintNode.TokenMetadataUrl);
+                if (tokenMetadata.metadataUri == mintNode.TokenMetadataUrl)
+                {
+                    if (!String.IsNullOrEmpty(tokenMetadata.name))
+                    {
+                        mintNode.SetTokenName(tokenMetadata.name);
+                    }
+
+                    if (!String.IsNullOrEmpty(tokenMetadata.description))
+                    {
+                        mintNode.SetTokenDescription(tokenMetadata.description);
+                    }
+
+                    if (!String.IsNullOrEmpty(tokenMetadata.image))
+                    {
+                        mintNode.SetTokenImageUri(tokenMetadata.image);
+                    }
+
+                    if (!String.IsNullOrEmpty(tokenMetadata.metadataJson))
+                    {
+                        mintNode.SetMetadataJson(tokenMetadata.metadataJson);
+                    }
+                }
             }
         }
 
