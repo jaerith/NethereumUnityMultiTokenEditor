@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text;
 
 using Nethereum.BlockchainProcessing.Processor;
 using Nethereum.Contracts.UnityERC1155;
@@ -15,6 +16,7 @@ using UnityEngine;
 using Nethereum.Unity.MultiToken;
 using Nethereum.Contracts;
 using Nethereum.Contracts.UnityERC1155.ContractDefinition;
+using UnityEditor;
 
 namespace Nethereum.Unity.Behaviours
 {
@@ -86,7 +88,10 @@ namespace Nethereum.Unity.Behaviours
         private List<EventLog<UnityErc1155TransferSingleEvent>> _erc1155TransferEventLogs = 
             new List<EventLog<UnityErc1155TransferSingleEvent>>();
 
-        public List<EventLog<UnityErc1155TransferSingleEvent>> LatestTokenTransfers { get { return _erc1155TransferEventLogs; } }
+        public List<EventLog<UnityErc1155TransferSingleEvent>> LatestTokenTransfers 
+        { 
+            get { return new List<EventLog<UnityErc1155TransferSingleEvent>>(_erc1155TransferEventLogs); }
+        }
 
         public event Action<EthereumBalanceChangeEvent> onBalanceUpdated;
 
@@ -160,7 +165,49 @@ namespace Nethereum.Unity.Behaviours
 
         public string GetTokenName(System.Numerics.BigInteger tokenId)
         {
-            return _tokenNames[tokenId];
+            return _tokenNames.ContainsKey(tokenId) ? _tokenNames[tokenId] : "Unknown Token";
+        }
+
+        public long GetTokensOwned(System.Numerics.BigInteger tokenId) 
+        {
+            return _tokenIdAmounts.ContainsKey(tokenId) ? _tokenIdAmounts[tokenId] : 0;
+        }
+
+        public string GetUserFriendlyLatestTransactionsReport(int displayCount = 3)
+        {
+            StringBuilder transactionsReport = new StringBuilder();
+
+            if (_erc1155TransferEventLogs.Count > 0)
+            {
+                var latestTransfers = LatestTokenTransfers;
+
+                var latestTransferCount = latestTransfers.Count;
+
+                var mostRecentTransfers =
+                    latestTransfers.Count > displayCount ?
+                    latestTransfers.GetRange((latestTransferCount - displayCount), displayCount) :
+                    latestTransfers;
+
+                mostRecentTransfers.Reverse();
+
+                int trxIndex = latestTransferCount;
+                foreach (var eventLog in mostRecentTransfers)
+                {
+                    var transfer = eventLog.Event;
+
+                    string eventMessage =
+                        "Trx # [" + trxIndex + "] ->" +
+                        ((transfer.To == PublicAddress) ? "Received [" : "Sent [") +
+                        transfer.Value + "] tokens of Token (" +
+                        GetTokenName(transfer.Id) + ") [" + transfer.Id + "]";
+
+                    transactionsReport.AppendLine(eventMessage);
+
+                    --trxIndex;
+                }
+            }
+
+            return transactionsReport.ToString();
         }
 
         public void RefreshAllTokenAmounts()
@@ -462,28 +509,31 @@ namespace Nethereum.Unity.Behaviours
                         lastBlockTransferMilestone = latestBlockNumber.Value - 25;
                     }
 
-                    Debug.Log("DEBUG: Latest block number is: [" + latestBlockNumber.Value + "]");
-                    Debug.Log("DEBUG: Checking out transfers sent to contract at address[" + _contract.GetRootNode().ContractAddress + "]");
-
-                    //crawl the required block range
-                    await logsProcessor.ExecuteAsync(
-                        toBlockNumber: latestBlockNumber.Value,
-                        cancellationToken: cancellationToken,
-                        startAtBlockNumberIfNotProcessed: lastBlockTransferMilestone);
-
-                    lock (_erc1155TransferEventLogs)
+                    if (lastBlockTransferMilestone > 0) 
                     {
-                        var relevantTransferLogs =
-                            foundContractTransferLogs.Where(tl => (tl.Event.From == PublicAddress) || ((tl.Event.To == PublicAddress)));
+                        Debug.Log("DEBUG: Latest block number is: [" + latestBlockNumber.Value + "]");
+                        Debug.Log("DEBUG: Checking out transfers sent to contract at address[" + _contract.GetRootNode().ContractAddress + "]");
 
-                        _erc1155TransferEventLogs.AddRange(relevantTransferLogs);
+                        //crawl the required block range
+                        await logsProcessor.ExecuteAsync(
+                            toBlockNumber: latestBlockNumber.Value,
+                            cancellationToken: cancellationToken,
+                            startAtBlockNumberIfNotProcessed: lastBlockTransferMilestone);
+
+                        lock (_erc1155TransferEventLogs)
+                        {
+                            var relevantTransferLogs =
+                                foundContractTransferLogs.Where(tl => (tl.Event.From == PublicAddress) || ((tl.Event.To == PublicAddress)));
+
+                            _erc1155TransferEventLogs.AddRange(relevantTransferLogs);
+                        }
+
+                        Debug.Log($"ERC1155 Logs found: [{_erc1155TransferEventLogs.Count}].");
+
+                        lastBlockTransferMilestone = latestBlockNumber;
+
+                        TokenTransferLogsLastTimeUpdated = DateTime.Now.ToString("MM/dd/yy H:mm:ss");
                     }
-
-                    Debug.Log($"ERC1155 Logs found: [{_erc1155TransferEventLogs.Count}].");
-
-                    lastBlockTransferMilestone = latestBlockNumber;
-
-                    TokenTransferLogsLastTimeUpdated = DateTime.Now.ToString("MM/dd/yy H:mm:ss");
                 }
                 catch (Exception ex)
                 {
