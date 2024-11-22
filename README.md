@@ -25,7 +25,7 @@ In addition to these tools, the user should have a basic understanding of Ethere
 
 By default, the contracts are pointed to a test chain (restarted every few minutes) that is run by the Nethereum project.  However, for novices, you are encouraged to run your own test chain.  And if you're an Ethereum pro ready with a L2 or your own L3, even better!
 
-## Using the Multi Token Editor
+## Deploying Contracts and Minting Tokens
 
 After placing the repo classes in a subfolder of Assets in the Unity project, the user will then be able to start by opening the Editor window via the menu path "Window -> Ethereum ->MultiToken Editor". 
 </br>
@@ -72,7 +72,17 @@ Now the minted tokens can be transferred or burned.  If there any game developme
 
 </br>
 
-## Using Ethereum Account Behaviour
+### Using Ethereum Token Disbursement
+
+In some cases, the developer might wish to distribute tokens to a number of game objects with an attached Ethereum Account Behaviour.  Even though there are options to distribute tokens (via the Editor window, via the Ethereum Account Behaviour inspector, etc.), it's not convenient when you want to distribute a Token ID to a number of accounts in one batch, especially while running/debugging the game.  In order to streamline the process, the [EthereumTokenDisbursement](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Scripts/Behaviour/EthereumTokenDisbursement.cs) class can allow the developer to organize the distribution of tokens in one place.  In addition, the class has an AutofillAccounts option, which will do the work of assembling all known accounts (i.e., Ethereum Account Behaviour instances) within the game and saving the developer the effort of manually adding them.  When the Token Ids and the target accounts have been finalized, the Disburse button will send 1 token of each ID to the target accounts.
+
+<br/>
+
+![Ethereum Token Disbursement](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Screenshots/ETD_Properties_Gameplay_Update.png)
+
+## Monitoring Token Ownership and Transfers
+
+### Using Ethereum Account Behaviour
 
 With the introduction of Ethereum tokens to any game, they will likely be attached to players, but they might also be attached to NPCs (or even in-game objects).  In all cases, an [EOA](https://ethereum.org/en/developers/docs/accounts/) is required to receive these tokens.  By attaching the [Ethereum Account Behaviour](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Scripts/Behaviour/EthereumAccountBehaviour.cs) script to a game object (player, NPC, or other type of asset) and then providing the right configuration (namely its EOA and the target ERC-1155 contract), the developer can observe the tokens that are received and then held by the account while the game is running within the Unity IDE.
 
@@ -94,11 +104,3 @@ If the developer only wants to return one type of token to the pool, they can do
 <br/>
 
 ![Ethereum Token Ownership Attached](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Screenshots/EOT_Properties_Gameplay_Update.png)
-
-## Using Ethereum Token Disbursement
-
-In some cases, the developer might wish to distribute tokens to a number of game objects with an attached Ethereum Account Behaviour, before or at the start of running/debugging the game.  Even though there are options to distribute tokens (via the Editor window, via the Ethereum Account Behaviour inspector, etc.), it's not convenient when you want to distribute a Token ID to a number of accounts in one batch.  In order to streamline the process, the [EthereumTokenDisbursement](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Scripts/Behaviour/EthereumTokenDisbursement.cs) class can allow the developer to organize the distribution of tokens in one place.  In addition, the class has an AutofillAccounts option, which will do the work of assembling all known accounts (i.e., Ethereum Account Behaviour instances) within the game and saving the developer the effort of manually adding them.  When the Token Ids and the target accounts have been finalized, the Disburse button will send 1 token of each ID to the target accounts.
-
-<br/>
-
-![Ethereum Token Disbursement](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Screenshots/ETD_Properties_Gameplay_Update.png)
