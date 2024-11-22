@@ -163,6 +163,22 @@ namespace Nethereum.Unity.Behaviours
             }
         }
 
+        public List<System.Numerics.BigInteger> GetTokenIdsWithBalances()
+        {
+            List<System.Numerics.BigInteger> tokenIds = new List<System.Numerics.BigInteger>();
+
+            foreach (var tokenId in _tokenIdAmounts.Keys)
+            {
+                var tokenIdBalance = _tokenIdAmounts[tokenId];
+                if (tokenIdBalance > 0)
+                {
+                    tokenIds.Add(tokenId);
+                }
+            }
+
+            return tokenIds;
+        }
+
         public string GetTokenName(System.Numerics.BigInteger tokenId)
         {
             return _tokenNames.ContainsKey(tokenId) ? _tokenNames[tokenId] : "Unknown Token";
