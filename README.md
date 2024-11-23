@@ -104,3 +104,14 @@ If the developer only wants to return one type of token to the pool, they can do
 <br/>
 
 ![Ethereum Token Ownership Attached](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Screenshots/EOT_Properties_Gameplay_Update.png)
+
+<br/>
+
+### Using the Simple HUD Display
+
+Even though the Ethereum Account Behaviour can be useful for both handling token transfers and monitoring transfer ownership (with the latter being particularly handy), it can potentially prove to be less useful in certain situations, especially when you need to expand the Scene window and close the Inspector panel (where the EAB's contents are being displayed).  And it's more awkward when you're launching a VR game from the Unity IDE and playtesting the game with your headset!  In these cases and others, it'd be nice to get the functionality of the EAB by presenting it within the running game itself.  In those cases, the developer might want to use the [NUMTE Simple HUD](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Prefabs/UI/NUMTE_HUD_Simple.prefab) prefab and its associated script [NumteHudSimpleUI](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Scripts/Behaviour/UI/NumteHudSimpleUI.cs).
+
+<br/>
+
+![NUMTE Simple HUD Display](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Screenshots/Simple_NUMTE_HUD_Gameplay.png)
+
