@@ -466,7 +466,7 @@ namespace Nethereum.Unity.MultiToken
                 }
                 else
                 {
-                    if (GUILayout.Button("Deploy"))
+                    if (GUILayout.Button("Mint"))
                     {
                         _mintingNode = node;
                     }
