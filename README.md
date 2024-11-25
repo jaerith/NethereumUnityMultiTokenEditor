@@ -45,6 +45,8 @@ Once the window has been opened and moved to a convenient location, one can star
 
 In the Editor window, the user can either deploy an ERC-1155 contract or connect to an existing one via the Contract node.  Once it has been connected to the contract, it will change its color to blue, indicating the connection is live.  
 
+NOTE: On deployment, if the error "InvalidOperationException: Insecure connection not allowed" is encountered, then the project will need to be configured to allow downloads over HTTP.  In that case, go to Edit/"Project Settings"/Player/"Other Settings" and then change "Allow downloads over HTTP" to "Always allowed".  When finished with prototyping/debugging with this tool, change the setting back before doing any production builds.
+
 ![Deployed Contract](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Screenshots/MultiTokenEditor_ContractNode_AfterDeployment.png)
 
 </br>
