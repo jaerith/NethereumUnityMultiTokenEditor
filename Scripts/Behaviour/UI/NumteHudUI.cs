@@ -83,6 +83,23 @@ namespace Nethereum.Unity.Behaviours.UI
             Debug.Log("DEBUG: NumteHudUI::IncrementTokenIndex() -> Incremented index to [" + _targetTokenIndex + "]");
         }
 
+        public void RefundTokens()
+        {
+            if ((_accountBehaviour != null) && (_targetTokenId > 0))
+            {
+                System.Numerics.BigInteger targetTokenIdBI = _targetTokenId;
+
+                var tokensOwned = _accountBehaviour.GetTokensOwned(targetTokenIdBI);
+                if (tokensOwned > 0)
+                {
+                    Debug.Log("NumteHudSimpleUI::RefundTokens() -> ID[" + _targetTokenId +
+                              "], Balance[" + tokensOwned + "]");
+
+                    _accountBehaviour.RefundOwnedTokens(_targetTokenId, tokensOwned);
+                }
+            }
+        }
+
         private void UpdateDisplay()
         {
             if ((_accountBehaviour != null) && (_targetTokenId > 0))
