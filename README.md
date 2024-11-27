@@ -111,9 +111,18 @@ If the developer only wants to return one type of token to the pool, they can do
 
 ### Using the Simple HUD Display
 
-Even though the Ethereum Account Behaviour can be useful for both handling token transfers and monitoring transfer ownership (with the latter being particularly handy), it can potentially prove to be less useful in certain situations, especially when you need to expand the Scene window and close the Inspector panel (where the EAB's contents are being displayed).  And it's more awkward when you're launching a VR game from the Unity IDE and playtesting the game with your headset!  In these cases and others, it'd be nice to get the functionality of the EAB by presenting it within the running game itself.  In those cases, the developer might want to use the [NUMTE Simple HUD](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Prefabs/UI/NUMTE_HUD_Simple.prefab) prefab and its associated script [NumteHudSimpleUI](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Scripts/Behaviour/UI/NumteHudSimpleUI.cs).
+Even though the Ethereum Account Behaviour can be useful for both handling token transfers and monitoring transfer ownership (with the latter being particularly handy), it can potentially prove to be less useful in certain situations, especially when you need to expand the Scene window and close the Inspector panel (where the EAB's contents are being displayed).  And it's more awkward when you're launching a VR game from the Unity IDE and playtesting the game with your headset!  In these cases and others, it'd be nice to get the functionality of the EAB by presenting it within the running game itself.  In those cases, the developer might want to use the [NUMTE Simple HUD](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Prefabs/UI/NUMTE_HUD_Simple.prefab) prefab and its associated script [NumteHudSimpleUI](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Scripts/Behaviour/UI/NumteHudSimpleUI.cs).  This HUD will focus on a single token type listed within an ERC1155 instance.
 
 <br/>
 
 ![NUMTE Simple HUD Display](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Screenshots/Simple_NUMTE_HUD_Gameplay.png)
 
+### Using the Standard HUD Display
+
+Like with the Simple HUD, the Standard HUD (attached to a EAB) displays token information within a running session of the game.  However, it is more useful, with buttons to iterate through the different token types in possession and a button to refund a particular set of tokens (in the case that the developer wants to do a reset).  The Standard HUD be be utilized via the [NUMTE HUD](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Prefabs/UI/NUMTE_HUD.prefab) prefab and its associated script [NumteHudUI](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Scripts/Behaviour/UI/NumteHudUI.cs).
+
+<br/>
+
+![NUMTE Standard HUD Display](https://github.com/jaerith/NethereumUnityMultiTokenEditor/blob/main/Screenshots/Standard_NUMTE_HUD_Gameplay.png)
+
+NOTE: In the case of both the Simple and Standard HUD prefabs, they will not come preloaded with their respective scripts.  Once the prefab is added to a project, its respective script will need to be added as a component to the prefab, and then the respective UI elements (text fields, button clicks, etc) will need to be attached to the appropriate properties/functions of the script.  It is a future goal for the prefab to come preloaded with the appropriate script, to save this extra step.
