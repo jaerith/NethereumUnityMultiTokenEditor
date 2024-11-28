@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 using Nethereum.Contracts.UnityERC1155;
+using UnityEditor;
 
 namespace Nethereum.Unity.Behaviours.UI
 {
@@ -92,10 +93,15 @@ namespace Nethereum.Unity.Behaviours.UI
                 var tokensOwned = _accountBehaviour.GetTokensOwned(targetTokenIdBI);
                 if (tokensOwned > 0)
                 {
-                    Debug.Log("NumteHudSimpleUI::RefundTokens() -> ID[" + _targetTokenId +
-                              "], Balance[" + tokensOwned + "]");
+                    if (EditorUtility.DisplayDialog("Refund tokens?",
+                                                    "Are you sure you want to refund [" + tokensOwned + "] tokens?",
+                                                    "Refund Them", "Keep Them"))
+                    {
+                        Debug.Log("NumteHudSimpleUI::RefundTokens() -> ID[" + _targetTokenId +
+                                  "], Balance[" + tokensOwned + "]");
 
-                    _accountBehaviour.RefundOwnedTokens(_targetTokenId, tokensOwned);
+                        _accountBehaviour.RefundOwnedTokens(_targetTokenId, tokensOwned);
+                    }
                 }
             }
         }
